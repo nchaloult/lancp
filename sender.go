@@ -12,11 +12,31 @@ const port = 6969
 func send(filePath string) error {
 	log.Println("lancp running in send mode...")
 
+	// Send broadcast message to find the device running in "receive mode".
 	broadcastAddr, err := getBroadcastAddr(port)
 	if err != nil {
 		return fmt.Errorf("failed to get UDP broadcast address: %v", err)
 	}
-	log.Printf("sending UDP broadcast msg to: %s\n", broadcastAddr)
+	broadcastUDPAddr, err := net.ResolveUDPAddr("udp4", broadcastAddr)
+	if err != nil {
+		return fmt.Errorf("failed to turn broadcast addr into UDPAddr struct:"+
+			" %v", err)
+	}
+	// https://github.com/aler9/howto-udp-broadcast-golang
+	conn, err := net.ListenPacket("udp4", fmt.Sprintf(":%d", port))
+	if err != nil {
+		return fmt.Errorf("failed to stand up local UDP packet announcer: %v",
+			err)
+	}
+	// TODO: might wanna do this sooner; don't defer it until the end of this
+	// big ass func. Putting this here will make more sense once the logic in
+	// this func is split up.
+	defer conn.Close()
+	payload := "hi from the sender's broadcast message"
+	_, err = conn.WriteTo([]byte(payload), broadcastUDPAddr)
+	if err != nil {
+		return fmt.Errorf("failed to send UDP broadcast message: %v", err)
+	}
 
 	return nil
 }
