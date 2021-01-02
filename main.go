@@ -37,7 +37,9 @@ func main() {
 		// TODO: write a function somewhere which makes sure that file actually
 		// exists on disk.
 		filePath := os.Args[2]
-		send(filePath)
+		if err := send(filePath); err != nil {
+			log.Fatal(err)
+		}
 	case "receive":
 		if len(os.Args) != 2 {
 			printUsageAndExit()
