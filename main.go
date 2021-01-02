@@ -1,7 +1,11 @@
 package main
 
-import "fmt"
+import "log"
 
 func main() {
-	fmt.Println("Your character doesn't blink in first person games")
+	// Disable timestamps on messages.
+	// Why not use fmt instead, then? https://stackoverflow.com/a/19646964
+	log.SetFlags(0)
+
+	log.Println("Your character doesn't blink in first person games")
 }
