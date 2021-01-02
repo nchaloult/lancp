@@ -20,8 +20,22 @@ func main() {
 	// Why not use fmt instead, then? https://stackoverflow.com/a/19646964
 	log.SetFlags(0)
 
-	log.Println("Your character doesn't blink in first person games")
-	printUsage()
+	// Verify that a subcommand was provided.
+	if len(os.Args) < 2 {
+		printUsage()
+		os.Exit(1)
+	}
+
+	subcommand := os.Args[1]
+	switch subcommand {
+	case "send":
+		log.Println("lancp running in send mode...")
+	case "receive":
+		log.Println("lancp running in receive mode...")
+	default:
+		printUsage()
+		os.Exit(1)
+	}
 }
 
 func printUsage() {
