@@ -38,7 +38,7 @@ func main() {
 		// exists on disk.
 		filePath := os.Args[2]
 		if err := send(filePath); err != nil {
-			log.Fatal(err)
+			printError(err)
 		}
 	case "receive":
 		if len(os.Args) != 2 {
@@ -54,4 +54,8 @@ func main() {
 func printUsageAndExit() {
 	fmt.Fprintf(os.Stderr, "%s\n", usage)
 	os.Exit(1)
+}
+
+func printError(err error) {
+	log.Fatalf("ERROR: %v", err)
 }
