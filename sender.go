@@ -14,7 +14,7 @@ func send(filePath string) error {
 
 	broadcastAddr, err := getBroadcastAddr(port)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get UDP broadcast address: %v", err)
 	}
 	log.Printf("sending UDP broadcast msg to: %s\n", broadcastAddr)
 
