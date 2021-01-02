@@ -22,16 +22,14 @@ func main() {
 
 	// Verify that a subcommand was provided.
 	if len(os.Args) < 2 {
-		printUsage()
-		os.Exit(1)
+		printUsageAndExit()
 	}
 
 	subcommand := os.Args[1]
 	switch subcommand {
 	case "send":
 		if len(os.Args) != 3 {
-			printUsage()
-			os.Exit(1)
+			printUsageAndExit()
 		}
 
 		log.Println("lancp running in send mode...")
@@ -40,17 +38,16 @@ func main() {
 		log.Printf("sending file: %s\n", filePath)
 	case "receive":
 		if len(os.Args) != 2 {
-			printUsage()
-			os.Exit(1)
+			printUsageAndExit()
 		}
 
 		log.Println("lancp running in receive mode...")
 	default:
-		printUsage()
-		os.Exit(1)
+		printUsageAndExit()
 	}
 }
 
-func printUsage() {
+func printUsageAndExit() {
 	fmt.Fprintf(os.Stderr, "%s\n", usage)
+	os.Exit(1)
 }
