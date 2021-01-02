@@ -45,7 +45,9 @@ func main() {
 			printUsageAndExit()
 		}
 
-		receive()
+		if err := receive(); err != nil {
+			printError(err)
+		}
 	default:
 		printUsageAndExit()
 	}
