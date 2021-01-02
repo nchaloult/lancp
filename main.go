@@ -32,16 +32,18 @@ func main() {
 			printUsageAndExit()
 		}
 
-		log.Println("lancp running in send mode...")
-
+		// TODO: validate that this looks like a file path.
+		//
+		// TODO: write a function somewhere which makes sure that file actually
+		// exists on disk.
 		filePath := os.Args[2]
-		log.Printf("sending file: %s\n", filePath)
+		send(filePath)
 	case "receive":
 		if len(os.Args) != 2 {
 			printUsageAndExit()
 		}
 
-		log.Println("lancp running in receive mode...")
+		receive()
 	default:
 		printUsageAndExit()
 	}
