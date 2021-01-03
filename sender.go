@@ -67,6 +67,20 @@ func send(filePath string) error {
 	return nil
 }
 
+// getPreferredOutboundAddr finds this device's preferred outbound IPv4 address
+// on its local network. It prepares to send a UDP datagram to Google's DNS, but
+// doesn't actually send one.
+func getPreferredOutboundAddr() (string, error) {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		return "", err
+	}
+	defer conn.Close()
+	preferredOutboundAddr := conn.LocalAddr().(*net.UDPAddr)
+
+	return preferredOutboundAddr.IP.String(), nil
+}
+
 // getBroadcastAddr finds this device's preferred outbound IPv4 address, then
 // replaces the host bytes in that address with the broadcast host (all 1s).
 // After that, it tacks on the provided port number to the address.
