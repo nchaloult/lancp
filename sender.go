@@ -12,6 +12,9 @@ const port = 6969
 func send(filePath string) error {
 	log.Println("lancp running in send mode...")
 
+	// TODO: Generate passphrase that the receiver will need to present.
+	generatedPassphrase := "sender"
+
 	// Send broadcast message to find the device running in "receive mode".
 	broadcastAddr, err := getBroadcastAddr(port)
 	if err != nil {
@@ -32,11 +35,34 @@ func send(filePath string) error {
 	// big ass func. Putting this here will make more sense once the logic in
 	// this func is split up.
 	defer conn.Close()
+
+	// TODO: Capture user input for the passphrase the receiver is presenting.
 	payload := "receiver"
+
 	_, err = conn.WriteTo([]byte(payload), broadcastUDPAddr)
 	if err != nil {
 		return fmt.Errorf("failed to send UDP broadcast message: %v", err)
 	}
+
+	// Listen for the response message from the receiver.
+	receiverPayloadBuf := make([]byte, 1024)
+	n, receiverAddr, err := conn.ReadFrom(receiverPayloadBuf)
+	if err != nil {
+		return fmt.Errorf("failed to read response message from receiver: %v",
+			err)
+	}
+	receiverPayload := string(receiverPayloadBuf[:n])
+
+	// Compare payload with expected payload.
+	if receiverPayload != generatedPassphrase {
+		return fmt.Errorf("got %q from %s, want %q",
+			receiverPayload, receiverAddr.String(), generatedPassphrase)
+	}
+	log.Printf("got %q from %s, matched expected passphrase",
+		payload, receiverAddr.String())
+
+	log.Println("At this point, receiver has already started a listener, and" +
+		" the sender gets the receiver's cert")
 
 	return nil
 }

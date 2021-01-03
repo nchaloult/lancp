@@ -40,5 +40,14 @@ func receive() error {
 	log.Printf("got %q from %s, matched expected passphrase",
 		payload, senderAddr.String())
 
+	// TODO: Capture user input for the passphrase the sender is presenting.
+	input := "sender"
+
+	// Send response message to sender.
+	_, err = conn.WriteTo([]byte(input), senderAddr)
+	if err != nil {
+		return fmt.Errorf("failed to send response message to sender: %v", err)
+	}
+
 	return nil
 }
