@@ -52,6 +52,13 @@ func send(filePath string) error {
 	// Listen for the response message from the receiver.
 	receiverPayloadBuf := make([]byte, 1024)
 	n, receiverAddr, err := conn.ReadFrom(receiverPayloadBuf)
+	// Ignore messages from ourself (like the broadcast message we just sent
+	// out).
+	if receiverAddr.String() == fmt.Sprintf("%s:%d", localAddr, port) {
+		// Discard our own broadcast message and continue listening for one more
+		// message.
+		n, receiverAddr, err = conn.ReadFrom(receiverPayloadBuf)
+	}
 	if err != nil {
 		return fmt.Errorf("failed to read response message from receiver: %v",
 			err)
