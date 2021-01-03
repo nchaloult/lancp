@@ -9,6 +9,9 @@ import (
 func receive() error {
 	log.Println("lancp running in receive mode...")
 
+	// TODO: Generate passphrase that the sender will need to present.
+	generatedPassphrase := "receiver"
+
 	// Listen for a broadcast message from the device running in "send mode."
 	conn, err := net.ListenPacket("udp4", fmt.Sprintf(":%d", port))
 	if err != nil {
@@ -29,7 +32,13 @@ func receive() error {
 	}
 	payload := string(payloadBuf[:n])
 
-	log.Printf("payload from %s: %q\n", senderAddr.String(), payload)
+	// Compare payload with expected payload.
+	if payload != generatedPassphrase {
+		return fmt.Errorf("got %q from %s, want %q",
+			payload, senderAddr.String(), generatedPassphrase)
+	}
+	log.Printf("got %q from %s, matched expected passphrase",
+		payload, senderAddr.String())
 
 	return nil
 }

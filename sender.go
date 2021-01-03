@@ -32,7 +32,7 @@ func send(filePath string) error {
 	// big ass func. Putting this here will make more sense once the logic in
 	// this func is split up.
 	defer conn.Close()
-	payload := "hi from the sender's broadcast message"
+	payload := "receiver"
 	_, err = conn.WriteTo([]byte(payload), broadcastUDPAddr)
 	if err != nil {
 		return fmt.Errorf("failed to send UDP broadcast message: %v", err)
