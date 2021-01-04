@@ -39,16 +39,13 @@ func send(filePath string) error {
 		return fmt.Errorf("failed to stand up local UDP packet announcer: %v",
 			err)
 	}
-	// TODO: might wanna do this sooner; don't defer it until the end of this
-	// big ass func. Putting this here will make more sense once the logic in
-	// this func is split up.
-	defer udpConn.Close()
 
 	// TODO: Capture user input for the passphrase the receiver is presenting.
 	payload := "receiver"
 
 	_, err = udpConn.WriteTo([]byte(payload), broadcastUDPAddr)
 	if err != nil {
+		udpConn.Close()
 		return fmt.Errorf("failed to send UDP broadcast message: %v", err)
 	}
 
@@ -63,10 +60,16 @@ func send(filePath string) error {
 		n, receiverAddr, err = udpConn.ReadFrom(receiverPayloadBuf)
 	}
 	if err != nil {
+		udpConn.Close()
 		return fmt.Errorf("failed to read response message from receiver: %v",
 			err)
 	}
 	receiverPayload := string(receiverPayloadBuf[:n])
+
+	// At this point, we aren't expecting to get any more UDP datagrams from the
+	// receiver. Since UDP is a stateless protocol, we can close the PacketConn
+	// on our end.
+	udpConn.Close()
 
 	// Compare payload with expected payload.
 	if receiverPayload != generatedPassphrase {

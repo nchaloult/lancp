@@ -30,15 +30,12 @@ func receive() error {
 		return fmt.Errorf("failed to stand up local UDP packet announcer: %v",
 			err)
 	}
-	// TODO: might wanna do this sooner; don't defer it until the end of this
-	// big ass func. Putting this here will make more sense once the logic in
-	// this func is split up.
-	defer udpConn.Close()
 
 	// Capture the payload that the sender included in their broadcast message.
 	payloadBuf := make([]byte, 1024)
 	n, senderAddr, err := udpConn.ReadFrom(payloadBuf)
 	if err != nil {
+		udpConn.Close()
 		return fmt.Errorf("failed to read broadcast message from sender: %v",
 			err)
 	}
@@ -47,6 +44,7 @@ func receive() error {
 
 	// Compare payload with expected payload.
 	if payload != generatedPassphrase {
+		udpConn.Close()
 		return fmt.Errorf("got %q from %s, want %q",
 			payload, senderAddr.String(), generatedPassphrase)
 	}
@@ -59,8 +57,14 @@ func receive() error {
 	// Send response message to sender.
 	_, err = udpConn.WriteTo([]byte(input), senderAddr)
 	if err != nil {
+		udpConn.Close()
 		return fmt.Errorf("failed to send response message to sender: %v", err)
 	}
+
+	// Even though the sender hasn't had time to receive and parse the response
+	// UDP datagram we just sent, we can close the PacketConn on our end since
+	// UDP is a stateless protocol.
+	udpConn.Close()
 
 	// Begin standing up TCP server to exchange cert, and prepare to establish a
 	// TLS connection with the sender.
