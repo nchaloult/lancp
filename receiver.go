@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/ed25519"
 	"crypto/rand"
@@ -9,9 +10,11 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/big"
 	"net"
+	"os"
 	"time"
 )
 
@@ -39,6 +42,7 @@ func receive() error {
 		return fmt.Errorf("failed to read broadcast message from sender: %v",
 			err)
 	}
+	// TODO: Rename.
 	payload := string(payloadBuf[:n])
 
 	// Compare payload with expected payload.
@@ -83,8 +87,58 @@ func receive() error {
 	// Send TLS certificate to the sender.
 	tcpConn.Write(cert.cert) // TODO: cert.cert is confusing.
 
+	// Listen for an attempt to establish a TLS connection from the sender.
+	tlsCfg, err := getReceiverTLSConfig(cert.cert, cert.sk)
+	if err != nil {
+		return fmt.Errorf("failed to build TLS config: %v", err)
+	}
+	// TODO: Perhaps have two configurable constants: port and tlsPort?
+	tlsLn, err := tls.Listen("tcp", fmt.Sprintf(":%d", port+1), tlsCfg)
+	if err != nil {
+		return fmt.Errorf("failed to start a TLS listener: %v", err)
+	}
+	defer tlsLn.Close()
+
+	// Close up the TCP connection after the TLS listener has already fired up.
+	// This is so the sender can try to establish a TLS connection with the
+	// receiver immeditaely after they get the receiver's public key, and not
+	// have to make any guesses or assumptions about how long the receiver will
+	// take to shut down their raw TCP listener and spin up their TLS listener.
 	tcpConn.Close()
 	tcpLn.Close()
+
+	// Block until the sender initiates the handshake.
+	tlsConn, err := tlsLn.Accept()
+	if err != nil {
+		return fmt.Errorf("failed to establish TLS connection with sender: %v",
+			err)
+	}
+	defer tlsConn.Close()
+
+	// Receive a file's bytes from the sender.
+	//
+	// TODO: Read the file name that the sender sends first. Right now, the file
+	// name is hard-coded by the receiver.
+	filePayload, err := ioutil.ReadAll(tlsConn)
+	if err != nil {
+		return fmt.Errorf("failed to receive file from sender: %v", err)
+	}
+
+	// Write that payload to a file on disk.
+	file, err := os.Create("from-sender")
+	if err != nil {
+		return fmt.Errorf("failed to create a new file on disk: %v", err)
+	}
+	defer file.Close()
+	writer := bufio.NewWriter(file)
+	n, err = writer.Write(filePayload)
+	if err != nil {
+		return fmt.Errorf("failed to write payload from sender to file on"+
+			" disk: %v", err)
+	}
+	writer.Flush()
+
+	log.Printf("received %d bytes from sender\n", n)
 
 	return nil
 }
