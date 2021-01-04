@@ -34,7 +34,7 @@ func send(filePath string) error {
 			" %v", err)
 	}
 	// https://github.com/aler9/howto-udp-broadcast-golang
-	conn, err := net.ListenPacket("udp4", fmt.Sprintf(":%d", port))
+	udpConn, err := net.ListenPacket("udp4", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return fmt.Errorf("failed to stand up local UDP packet announcer: %v",
 			err)
@@ -42,25 +42,25 @@ func send(filePath string) error {
 	// TODO: might wanna do this sooner; don't defer it until the end of this
 	// big ass func. Putting this here will make more sense once the logic in
 	// this func is split up.
-	defer conn.Close()
+	defer udpConn.Close()
 
 	// TODO: Capture user input for the passphrase the receiver is presenting.
 	payload := "receiver"
 
-	_, err = conn.WriteTo([]byte(payload), broadcastUDPAddr)
+	_, err = udpConn.WriteTo([]byte(payload), broadcastUDPAddr)
 	if err != nil {
 		return fmt.Errorf("failed to send UDP broadcast message: %v", err)
 	}
 
 	// Listen for the response message from the receiver.
 	receiverPayloadBuf := make([]byte, 1024)
-	n, receiverAddr, err := conn.ReadFrom(receiverPayloadBuf)
+	n, receiverAddr, err := udpConn.ReadFrom(receiverPayloadBuf)
 	// Ignore messages from ourself (like the broadcast message we just sent
 	// out).
 	if receiverAddr.String() == fmt.Sprintf("%s:%d", localAddr, port) {
 		// Discard our own broadcast message and continue listening for one more
 		// message.
-		n, receiverAddr, err = conn.ReadFrom(receiverPayloadBuf)
+		n, receiverAddr, err = udpConn.ReadFrom(receiverPayloadBuf)
 	}
 	if err != nil {
 		return fmt.Errorf("failed to read response message from receiver: %v",
