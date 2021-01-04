@@ -22,7 +22,7 @@ func receive() error {
 	generatedPassphrase := "receiver"
 
 	// Listen for a broadcast message from the device running in "send mode."
-	conn, err := net.ListenPacket("udp4", fmt.Sprintf(":%d", port))
+	udpConn, err := net.ListenPacket("udp4", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return fmt.Errorf("failed to stand up local UDP packet announcer: %v",
 			err)
@@ -30,11 +30,11 @@ func receive() error {
 	// TODO: might wanna do this sooner; don't defer it until the end of this
 	// big ass func. Putting this here will make more sense once the logic in
 	// this func is split up.
-	defer conn.Close()
+	defer udpConn.Close()
 
 	// Capture the payload that the sender included in their broadcast message.
 	payloadBuf := make([]byte, 1024)
-	n, senderAddr, err := conn.ReadFrom(payloadBuf)
+	n, senderAddr, err := udpConn.ReadFrom(payloadBuf)
 	if err != nil {
 		return fmt.Errorf("failed to read broadcast message from sender: %v",
 			err)
@@ -53,10 +53,38 @@ func receive() error {
 	input := "sender"
 
 	// Send response message to sender.
-	_, err = conn.WriteTo([]byte(input), senderAddr)
+	_, err = udpConn.WriteTo([]byte(input), senderAddr)
 	if err != nil {
 		return fmt.Errorf("failed to send response message to sender: %v", err)
 	}
+
+	// Begin standing up TCP server to exchange cert, and prepare to establish a
+	// TLS connection with the sender.
+
+	// Generate self-signed TLS cert.
+	cert, err := generateSelfSignedCert()
+	if err != nil {
+		return fmt.Errorf("failed to generate certificate: %v", err)
+	}
+
+	// Listen for the first part of the TCP handshake from the sender. Send the
+	// sender the TLS certificate on that connection.
+	tcpLn, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		return fmt.Errorf("failed to start a TCP listener: %v", err)
+	}
+	// Block until the sender initiates the handshake.
+	tcpConn, err := tcpLn.Accept()
+	if err != nil {
+		return fmt.Errorf("failed to establish TCP connection with sender: %v",
+			err)
+	}
+
+	// Send TLS certificate to the sender.
+	tcpConn.Write(cert.cert) // TODO: cert.cert is confusing.
+
+	tcpConn.Close()
+	tcpLn.Close()
 
 	return nil
 }
