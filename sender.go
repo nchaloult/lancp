@@ -89,7 +89,27 @@ func send(filePath string) error {
 	}
 	tcpConn.Close()
 
-	log.Println(cert)
+	// Connect to the receiver's TLS conn with that cert.
+	tlsCfg := getSenderTLSConfig(cert)
+	// TODO: Wow this is a scuffed way to get the receiver's TLS addr.
+	receiverIP := receiverAddr.String()[:len(receiverAddr.String())-5]
+	tlsConn, err := tls.Dial(
+		"tcp",
+		fmt.Sprintf("%s:%d", receiverIP, port+1),
+		tlsCfg,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to establish TLS conn with receiver: %v", err)
+	}
+	defer tlsConn.Close()
+
+	// Send a file to the receiver.
+	// TODO: Pull file path from command-line args.
+	filePayload, err := ioutil.ReadFile("main.go")
+	if err != nil {
+		return fmt.Errorf("failed to read file on disk: %v", err)
+	}
+	tlsConn.Write(filePayload)
 
 	return nil
 }
