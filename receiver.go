@@ -101,9 +101,9 @@ func receive() error {
 
 	// Close up the TCP connection after the TLS listener has already fired up.
 	// This is so the sender can try to establish a TLS connection with the
-	// receiver immeditaely after they get the receiver's public key, and not
+	// receiver immediately after they get the receiver's public key, and not
 	// have to make any guesses or assumptions about how long the receiver will
-	// take to shut down their raw TCP listener and spin up their TLS listener.
+	// take to shut down their TCP listener and spin up their TLS listener.
 	tcpConn.Close()
 	tcpLn.Close()
 
