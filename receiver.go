@@ -93,10 +93,10 @@ func receive() error {
 	}
 
 	// Send TLS certificate to the sender.
-	tcpConn.Write(cert.cert) // TODO: cert.cert is confusing.
+	tcpConn.Write(cert.bytes)
 
 	// Listen for an attempt to establish a TLS connection from the sender.
-	tlsCfg, err := getReceiverTLSConfig(cert.cert, cert.sk)
+	tlsCfg, err := getReceiverTLSConfig(cert.bytes, cert.sk)
 	if err != nil {
 		return fmt.Errorf("failed to build TLS config: %v", err)
 	}
@@ -152,8 +152,11 @@ func receive() error {
 }
 
 type selfSignedCert struct {
-	cert []byte
-	sk   []byte
+	// The certificate as PEM-encoded bytes.
+	bytes []byte
+
+	// The private key as PEM-encoded bytes.
+	sk []byte
 }
 
 // generateSelfSignedCert creates a self-signed x509 certificate to be used when
@@ -241,8 +244,8 @@ func generateSelfSignedCert() (*selfSignedCert, error) {
 	}
 
 	return &selfSignedCert{
-		cert: certPEM.Bytes(),
-		sk:   skPEM.Bytes(),
+		bytes: certPEM.Bytes(),
+		sk:    skPEM.Bytes(),
 	}, nil
 }
 
