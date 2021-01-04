@@ -19,13 +19,18 @@ import (
 )
 
 func receive() error {
+	// TODO: Revisit where these are initialized. Find new homes for these once
+	// this big ass func is broken up into pieces.
+	portAsStr := fmt.Sprintf(":%d", port)
+	tlsPortAsStr := fmt.Sprintf(":%d", port+1)
+
 	log.Println("lancp running in receive mode...")
 
 	// TODO: Generate passphrase that the sender will need to present.
 	generatedPassphrase := "receiver"
 
 	// Listen for a broadcast message from the device running in "send mode."
-	udpConn, err := net.ListenPacket("udp4", fmt.Sprintf(":%d", port))
+	udpConn, err := net.ListenPacket("udp4", portAsStr)
 	if err != nil {
 		return fmt.Errorf("failed to stand up local UDP packet announcer: %v",
 			err)
@@ -77,7 +82,7 @@ func receive() error {
 
 	// Listen for the first part of the TCP handshake from the sender. Send the
 	// sender the TLS certificate on that connection.
-	tcpLn, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	tcpLn, err := net.Listen("tcp", portAsStr)
 	if err != nil {
 		return fmt.Errorf("failed to start a TCP listener: %v", err)
 	}
@@ -97,7 +102,7 @@ func receive() error {
 		return fmt.Errorf("failed to build TLS config: %v", err)
 	}
 	// TODO: Perhaps have two configurable constants: port and tlsPort?
-	tlsLn, err := tls.Listen("tcp", fmt.Sprintf(":%d", port+1), tlsCfg)
+	tlsLn, err := tls.Listen("tcp", tlsPortAsStr, tlsCfg)
 	if err != nil {
 		return fmt.Errorf("failed to start a TLS listener: %v", err)
 	}
