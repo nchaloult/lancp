@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -132,4 +134,17 @@ func getBroadcastAddr(
 	broadcastAddr += ".255" + portAsStr
 
 	return broadcastAddr, nil
+}
+
+// getSenderTLSConfig builds a tls.Config object for the sender to use when
+// establishing a TLS connection with the receiver. It adds the public key of
+// the certificate authority that the receiver created to the config's
+// collection of trusted certificate authorities.
+func getSenderTLSConfig(certPEM []byte) *tls.Config {
+	certPool := x509.NewCertPool()
+	certPool.AppendCertsFromPEM(certPEM)
+
+	return &tls.Config{
+		RootCAs: certPool,
+	}
 }
