@@ -1,9 +1,17 @@
 package main
 
 import (
+	"bytes"
+	"crypto/ed25519"
+	"crypto/rand"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"fmt"
 	"log"
+	"math/big"
 	"net"
+	"time"
 )
 
 func receive() error {
@@ -50,4 +58,93 @@ func receive() error {
 	}
 
 	return nil
+}
+
+type selfSignedCert struct {
+	cert []byte
+	sk   []byte
+}
+
+// generateSelfSignedCert creates a self-signed x509 certificate to be used when
+// establishing a TLS connection with the sender.
+//
+// It generates a public/private key pair, uses those keys to build an x509
+// certificate, self-signs that certificate so the sender will trust it, and
+// PEM-encodes that certificate and private key.
+//
+// Inspired by https://golang.org/src/crypto/tls/generate_cert.go
+func generateSelfSignedCert() (*selfSignedCert, error) {
+	// Get public/private key pair for certificate.
+	_, sk, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate public/private key pair: %v",
+			err)
+	}
+
+	// Get serial number for certificate.
+	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate serial number for"+
+			" certificate: %v", err)
+	}
+
+	// Build a certificate template.
+	certTemplate := x509.Certificate{
+		IPAddresses: []net.IP{net.IPv4(127, 0, 0, 1)}, // TODO: Set dynamically.
+
+		SerialNumber: serialNumber,
+		Subject: pkix.Name{
+			Organization: []string{"lancp"}, // TODO: Don't hard-code this.
+		},
+		NotBefore: time.Now(),
+		NotAfter:  time.Now(),
+
+		KeyUsage: x509.KeyUsageDigitalSignature,
+
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+	}
+
+	// Turn the certificate template into PEM-encoded bytes.
+
+	// Self-sign the cert by making the parent authority be the same cert.
+	certBytes, err := x509.CreateCertificate(
+		rand.Reader,
+		&certTemplate,
+		&certTemplate,
+		sk.Public().(ed25519.PublicKey),
+		sk,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create cert from template: %v", err)
+	}
+	certPEM := new(bytes.Buffer)
+	err = pem.Encode(certPEM, &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: certBytes,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to PEM-encode certificate: %v", err)
+	}
+
+	// Turn the private key into PEM-encoded bytes.
+	skBytes, err := x509.MarshalPKCS8PrivateKey(sk)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert private key from key pair"+
+			" into PKCS#8 form: %v", err)
+	}
+	skPEM := new(bytes.Buffer)
+	err = pem.Encode(skPEM, &pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: skBytes,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to PEM-encode private key: %v", err)
+	}
+
+	return &selfSignedCert{
+		cert: certPEM.Bytes(),
+		sk:   skPEM.Bytes(),
+	}, nil
 }
