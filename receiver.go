@@ -96,7 +96,7 @@ func receive() error {
 	tcpConn.Write(cert.bytes)
 
 	// Listen for an attempt to establish a TLS connection from the sender.
-	tlsCfg, err := getReceiverTLSConfig(cert.bytes, cert.sk)
+	tlsCfg, err := getReceiverTLSConfig(cert)
 	if err != nil {
 		return fmt.Errorf("failed to build TLS config: %v", err)
 	}
@@ -252,8 +252,8 @@ func generateSelfSignedCert() (*selfSignedCert, error) {
 // getReceiverTLSConfig builds a tls.Config object for the receiver to use when
 // establishing a TLS connection with the sender. It adds the receiver's public/
 // private key pair to the config's list of certificates.
-func getReceiverTLSConfig(certPEM, privateKeyPEM []byte) (*tls.Config, error) {
-	keyPair, err := tls.X509KeyPair(certPEM, privateKeyPEM)
+func getReceiverTLSConfig(cert *selfSignedCert) (*tls.Config, error) {
+	keyPair, err := tls.X509KeyPair(cert.bytes, cert.sk)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create x509 public/private key pair"+
 			" from the provided self-signed certificate: %v", err)
