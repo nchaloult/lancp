@@ -50,21 +50,21 @@ func send(filePath string) error {
 	}
 
 	// Listen for the response message from the receiver.
-	receiverPayloadBuf := make([]byte, 1024)
-	n, receiverAddr, err := udpConn.ReadFrom(receiverPayloadBuf)
+	passphrasePayloadBuf := make([]byte, 1024)
+	n, receiverAddr, err := udpConn.ReadFrom(passphrasePayloadBuf)
 	// Ignore messages from ourself (like the broadcast message we just sent
 	// out).
 	if receiverAddr.String() == fmt.Sprintf("%s:%d", localAddr, port) {
 		// Discard our own broadcast message and continue listening for one more
 		// message.
-		n, receiverAddr, err = udpConn.ReadFrom(receiverPayloadBuf)
+		n, receiverAddr, err = udpConn.ReadFrom(passphrasePayloadBuf)
 	}
 	if err != nil {
 		udpConn.Close()
 		return fmt.Errorf("failed to read response message from receiver: %v",
 			err)
 	}
-	receiverPayload := string(receiverPayloadBuf[:n])
+	passphrasePayload := string(passphrasePayloadBuf[:n])
 
 	// At this point, we aren't expecting to get any more UDP datagrams from the
 	// receiver. Since UDP is a stateless protocol, we can close the PacketConn
@@ -72,12 +72,12 @@ func send(filePath string) error {
 	udpConn.Close()
 
 	// Compare payload with expected payload.
-	if receiverPayload != generatedPassphrase {
+	if passphrasePayload != generatedPassphrase {
 		return fmt.Errorf("got %q from %s, want %q",
-			receiverPayload, receiverAddr.String(), generatedPassphrase)
+			passphrasePayload, receiverAddr.String(), generatedPassphrase)
 	}
 	log.Printf("got %q from %s, matched expected passphrase",
-		payload, receiverAddr.String())
+		passphrasePayload, receiverAddr.String())
 
 	// Get TLS certificate from receiver through an insecure TCP conn.
 	tcpConn, err := net.Dial("tcp", receiverAddr.String())

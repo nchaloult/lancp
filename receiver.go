@@ -37,24 +37,23 @@ func receive() error {
 	}
 
 	// Capture the payload that the sender included in their broadcast message.
-	payloadBuf := make([]byte, 1024)
-	n, senderAddr, err := udpConn.ReadFrom(payloadBuf)
+	passphrasePayloadBuf := make([]byte, 1024)
+	n, senderAddr, err := udpConn.ReadFrom(passphrasePayloadBuf)
 	if err != nil {
 		udpConn.Close()
 		return fmt.Errorf("failed to read broadcast message from sender: %v",
 			err)
 	}
-	// TODO: Rename.
-	payload := string(payloadBuf[:n])
+	passphrasePayload := string(passphrasePayloadBuf[:n])
 
 	// Compare payload with expected payload.
-	if payload != generatedPassphrase {
+	if passphrasePayload != generatedPassphrase {
 		udpConn.Close()
 		return fmt.Errorf("got %q from %s, want %q",
-			payload, senderAddr.String(), generatedPassphrase)
+			passphrasePayload, senderAddr.String(), generatedPassphrase)
 	}
 	log.Printf("got %q from %s, matched expected passphrase",
-		payload, senderAddr.String())
+		passphrasePayload, senderAddr.String())
 
 	// TODO: Capture user input for the passphrase the sender is presenting.
 	input := "sender"
