@@ -73,8 +73,16 @@ func receive() error {
 	// Begin standing up TCP server to exchange cert, and prepare to establish a
 	// TLS connection with the sender.
 
+	// TODO: This called func lives in sender.go rn. Move this to some new
+	// shared location when you refactor everything.
+	localAddr, err := getPreferredOutboundAddr()
+	if err != nil {
+		return fmt.Errorf("failed to get this device's local IP address: %v",
+			err)
+	}
+
 	// Generate self-signed TLS cert.
-	cert, err := generateSelfSignedCert()
+	cert, err := generateSelfSignedCert(localAddr)
 	if err != nil {
 		return fmt.Errorf("failed to generate certificate: %v", err)
 	}
@@ -100,7 +108,6 @@ func receive() error {
 	if err != nil {
 		return fmt.Errorf("failed to build TLS config: %v", err)
 	}
-	// TODO: Perhaps have two configurable constants: port and tlsPort?
 	tlsLn, err := tls.Listen("tcp", tlsPortAsStr, tlsCfg)
 	if err != nil {
 		return fmt.Errorf("failed to start a TLS listener: %v", err)
@@ -160,14 +167,15 @@ type selfSignedCert struct {
 }
 
 // generateSelfSignedCert creates a self-signed x509 certificate to be used when
-// establishing a TLS connection with the sender.
+// establishing a TLS connection with the sender. The created certificate is
+// valid for the device with the provided IPv4 address.
 //
 // It generates a public/private key pair, uses those keys to build an x509
 // certificate, self-signs that certificate so the sender will trust it, and
 // PEM-encodes that certificate and private key.
 //
 // Inspired by https://golang.org/src/crypto/tls/generate_cert.go
-func generateSelfSignedCert() (*selfSignedCert, error) {
+func generateSelfSignedCert(ip net.IP) (*selfSignedCert, error) {
 	// Get public/private key pair for certificate.
 	_, sk, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
@@ -185,7 +193,7 @@ func generateSelfSignedCert() (*selfSignedCert, error) {
 
 	// Build a certificate template.
 	certTemplate := x509.Certificate{
-		IPAddresses: []net.IP{net.IPv4(127, 0, 0, 1)}, // TODO: Set dynamically.
+		IPAddresses: []net.IP{ip},
 
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
