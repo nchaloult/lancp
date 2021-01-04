@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
 	"strings"
@@ -73,8 +74,20 @@ func send(filePath string) error {
 	log.Printf("got %q from %s, matched expected passphrase",
 		payload, receiverAddr.String())
 
-	log.Println("At this point, receiver has already started a listener, and" +
-		" the sender gets the receiver's cert")
+	// Get TLS certificate from receiver through an insecure TCP conn.
+	tcpConn, err := net.Dial("tcp", receiverAddr.String())
+	if err != nil {
+		return fmt.Errorf("failed to establish TCP connection with sender: %v",
+			err)
+	}
+	cert, err := ioutil.ReadAll(tcpConn)
+	if err != nil {
+		return fmt.Errorf("failed to receive TLS certificate from receiver: %v",
+			err)
+	}
+	tcpConn.Close()
+
+	log.Println(cert)
 
 	return nil
 }
