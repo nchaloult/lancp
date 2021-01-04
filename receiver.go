@@ -181,7 +181,13 @@ func generateSelfSignedCert() (*selfSignedCert, error) {
 			Organization: []string{"lancp"}, // TODO: Don't hard-code this.
 		},
 		NotBefore: time.Now(),
-		NotAfter:  time.Now(),
+		// Would rather not shrink this time gap any further to allow a bit of
+		// discrepancy between the system time on the sender's machine vs. the
+		// receiver's machine.
+		//
+		// TODO: Can we recover from cert expiration errors by creating new
+		// certs with a larger time gaps until one works? Would that be safe?
+		NotAfter: time.Now().Add(time.Minute),
 
 		KeyUsage: x509.KeyUsageDigitalSignature,
 
