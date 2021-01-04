@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -146,5 +147,20 @@ func generateSelfSignedCert() (*selfSignedCert, error) {
 	return &selfSignedCert{
 		cert: certPEM.Bytes(),
 		sk:   skPEM.Bytes(),
+	}, nil
+}
+
+// getReceiverTLSConfig builds a tls.Config object for the receiver to use when
+// establishing a TLS connection with the sender. It adds the receiver's public/
+// private key pair to the config's list of certificates.
+func getReceiverTLSConfig(certPEM, privateKeyPEM []byte) (*tls.Config, error) {
+	keyPair, err := tls.X509KeyPair(certPEM, privateKeyPEM)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create x509 public/private key pair"+
+			" from the provided self-signed certificate: %v", err)
+	}
+
+	return &tls.Config{
+		Certificates: []tls.Certificate{keyPair},
 	}, nil
 }
