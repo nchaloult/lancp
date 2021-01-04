@@ -24,7 +24,8 @@ func send(filePath string) error {
 		return fmt.Errorf("failed to get this device's local IP address: %v",
 			err)
 	}
-	broadcastAddr, err := getBroadcastAddr(localAddr, port)
+	localAddrAsStr := localAddr.String()
+	broadcastAddr, err := getBroadcastAddr(localAddrAsStr, port)
 	if err != nil {
 		return fmt.Errorf("failed to get UDP broadcast address: %v", err)
 	}
@@ -54,7 +55,7 @@ func send(filePath string) error {
 	n, receiverAddr, err := udpConn.ReadFrom(passphrasePayloadBuf)
 	// Ignore messages from ourself (like the broadcast message we just sent
 	// out).
-	if receiverAddr.String() == fmt.Sprintf("%s:%d", localAddr, port) {
+	if receiverAddr.String() == fmt.Sprintf("%s:%d", localAddrAsStr, port) {
 		// Discard our own broadcast message and continue listening for one more
 		// message.
 		n, receiverAddr, err = udpConn.ReadFrom(passphrasePayloadBuf)
@@ -120,15 +121,15 @@ func send(filePath string) error {
 // getPreferredOutboundAddr finds this device's preferred outbound IPv4 address
 // on its local network. It prepares to send a UDP datagram to Google's DNS, but
 // doesn't actually send one.
-func getPreferredOutboundAddr() (string, error) {
+func getPreferredOutboundAddr() (net.IP, error) {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer conn.Close()
 	preferredOutboundAddr := conn.LocalAddr().(*net.UDPAddr)
 
-	return preferredOutboundAddr.IP.String(), nil
+	return preferredOutboundAddr.IP, nil
 }
 
 // getBroadcastAddr accepts a device's preferred outbound IPv4 address, then
