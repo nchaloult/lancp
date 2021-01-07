@@ -51,6 +51,7 @@ func send(filePath string) error {
 	}
 
 	// Listen for the response message from the receiver.
+	// TODO: Shrink buffer size once you've written passphrase generation logic.
 	passphrasePayloadBuf := make([]byte, 1024)
 	n, receiverAddr, err := udpConn.ReadFrom(passphrasePayloadBuf)
 	// Ignore messages from ourself (like the broadcast message we just sent

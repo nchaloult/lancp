@@ -37,6 +37,7 @@ func receive() error {
 	}
 
 	// Capture the payload that the sender included in their broadcast message.
+	// TODO: Shrink buffer size once you've written passphrase generation logic.
 	passphrasePayloadBuf := make([]byte, 1024)
 	n, senderAddr, err := udpConn.ReadFrom(passphrasePayloadBuf)
 	if err != nil {
