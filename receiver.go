@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/ed25519"
 	"crypto/rand"
@@ -10,11 +9,12 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"math/big"
 	"net"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -131,28 +131,42 @@ func receive() error {
 	}
 	defer tlsConn.Close()
 
-	// Receive a file's bytes from the sender.
+	// Create a file on disk that will eventually store the payload we receive
+	// from the sender.
 	//
 	// TODO: Read the file name that the sender sends first. Right now, the file
 	// name is hard-coded by the receiver.
-	filePayload, err := ioutil.ReadAll(tlsConn)
-	if err != nil {
-		return fmt.Errorf("failed to receive file from sender: %v", err)
-	}
-
-	// Write that payload to a file on disk.
 	file, err := os.Create("from-sender")
 	if err != nil {
 		return fmt.Errorf("failed to create a new file on disk: %v", err)
 	}
 	defer file.Close()
-	writer := bufio.NewWriter(file)
-	n, err = writer.Write(filePayload)
+
+	// Receive file's bytes from the sender.
+	// TODO: Is this an okay size for this buffer? How big could it ever get?
+	fileSizeBuf := make([]byte, 10)
+	n, err = tlsConn.Read(fileSizeBuf)
 	if err != nil {
-		return fmt.Errorf("failed to write payload from sender to file on"+
-			" disk: %v", err)
+		return fmt.Errorf("failed to read file size from sender: %v", err)
 	}
-	writer.Flush()
+	fileSizeAsStr := string(fileSizeBuf[:n])
+	fileSize, err := strconv.ParseInt(fileSizeAsStr, 10, 64)
+	if err != nil {
+		return fmt.Errorf("failed to convert %q to an int: %v", fileSizeAsStr)
+	}
+
+	// Write that payload to a file on disk.
+	var receivedBytes int64
+	for {
+		if (fileSize - receivedBytes) < filePayloadBufSize {
+			io.CopyN(file, tlsConn, (fileSize - receivedBytes))
+			tlsConn.Read(make([]byte, (receivedBytes+filePayloadBufSize)-fileSize))
+			break
+		}
+
+		io.CopyN(file, tlsConn, filePayloadBufSize)
+		receivedBytes += filePayloadBufSize
+	}
 
 	log.Printf("received %d bytes from sender\n", n)
 

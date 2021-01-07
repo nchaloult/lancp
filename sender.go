@@ -9,13 +9,11 @@ import (
 	"log"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 )
 
-const (
-	port               = 6969
-	filePayloadBufSize = 8192
-)
+const port = 6969
 
 func send(filePath string) error {
 	log.Println("lancp running in send mode...")
@@ -113,13 +111,25 @@ func send(filePath string) error {
 	}
 	defer tlsConn.Close()
 
-	// Send a file to the receiver.
+	// Send file size to receiver.
+
 	// TODO: Pull file path from command-line args.
 	fileName := "main.go"
 	file, err := os.Open(fileName)
 	if err != nil {
 		return fmt.Errorf("failed to open file: %s: %v", fileName, err)
 	}
+
+	// Send file size to receiver.
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to retrieve info about the file %s: %v",
+			fileName, err)
+	}
+	fileSize := strconv.FormatInt(fileInfo.Size(), 10)
+	tlsConn.Write([]byte(fileSize))
+
+	// Send file to the receiver.
 	filePayloadBuf := make([]byte, filePayloadBufSize)
 	for {
 		_, err := file.Read(filePayloadBuf)
