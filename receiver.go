@@ -152,7 +152,8 @@ func receive() error {
 	fileSizeAsStr := string(fileSizeBuf[:n])
 	fileSize, err := strconv.ParseInt(fileSizeAsStr, 10, 64)
 	if err != nil {
-		return fmt.Errorf("failed to convert %q to an int: %v", fileSizeAsStr)
+		return fmt.Errorf("failed to convert %q to an int: %v",
+			fileSizeAsStr, err)
 	}
 
 	// Write that payload to a file on disk.
