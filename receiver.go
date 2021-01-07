@@ -143,6 +143,7 @@ func receive() error {
 	defer file.Close()
 
 	// Receive file's bytes from the sender.
+
 	// TODO: Is this an okay size for this buffer? How big could it ever get?
 	fileSizeBuf := make([]byte, 10)
 	n, err = tlsConn.Read(fileSizeBuf)

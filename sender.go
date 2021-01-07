@@ -136,6 +136,7 @@ func send(filePath string) error {
 		if err == io.EOF {
 			break
 		}
+
 		tlsConn.Write(filePayloadBuf)
 	}
 
