@@ -168,7 +168,7 @@ func receive() error {
 		receivedBytes += filePayloadBufSize
 	}
 
-	log.Printf("received %d bytes from sender\n", n)
+	log.Printf("received %d bytes from sender\n", receivedBytes)
 
 	return nil
 }
