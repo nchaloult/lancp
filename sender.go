@@ -4,13 +4,18 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
+	"os"
 	"strings"
 )
 
-const port = 6969
+const (
+	port               = 6969
+	filePayloadBufSize = 8192
+)
 
 func send(filePath string) error {
 	log.Println("lancp running in send mode...")
@@ -110,11 +115,19 @@ func send(filePath string) error {
 
 	// Send a file to the receiver.
 	// TODO: Pull file path from command-line args.
-	filePayload, err := ioutil.ReadFile("main.go")
+	fileName := "main.go"
+	file, err := os.Open(fileName)
 	if err != nil {
-		return fmt.Errorf("failed to read file on disk: %v", err)
+		return fmt.Errorf("failed to open file: %s: %v", fileName, err)
 	}
-	tlsConn.Write(filePayload)
+	filePayloadBuf := make([]byte, filePayloadBufSize)
+	for {
+		_, err := file.Read(filePayloadBuf)
+		if err == io.EOF {
+			break
+		}
+		tlsConn.Write(filePayloadBuf)
+	}
 
 	return nil
 }
