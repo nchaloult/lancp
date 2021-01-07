@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/ed25519"
 	"crypto/rand"
@@ -15,6 +16,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -56,11 +58,21 @@ func receive() error {
 	log.Printf("got %q from %s, matched expected passphrase",
 		passphrasePayload, senderAddr.String())
 
-	// TODO: Capture user input for the passphrase the sender is presenting.
-	input := "sender"
+	// Capture user input for the passphrase the sender is presenting.
+
+	stdinReader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter the passphrase on the sender's machine:\n> ")
+	userInput, err := stdinReader.ReadString('\n')
+	if err != nil {
+		// TODO: Should we handle the case where err == io.EOF differently?
+		return fmt.Errorf("failed to read passphrase input from user: %v", err)
+	}
+	// Convert all CRLF line endings to LF endings.
+	// TODO: Is this necessary? Even on Windows machines?
+	userInput = strings.Replace(userInput, "\n", "", -1)
 
 	// Send response message to sender.
-	_, err = udpConn.WriteTo([]byte(input), senderAddr)
+	_, err = udpConn.WriteTo([]byte(userInput), senderAddr)
 	if err != nil {
 		udpConn.Close()
 		return fmt.Errorf("failed to send response message to sender: %v", err)
