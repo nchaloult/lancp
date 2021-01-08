@@ -30,6 +30,9 @@ func receive() error {
 
 	generatedPassphrase := generatePassphrase()
 
+	// Display the generated passphrase for the sender to send.
+	log.Printf("Passphrase: %s\n", generatedPassphrase)
+
 	// Listen for a broadcast message from the device running in "send mode."
 	udpConn, err := net.ListenPacket("udp4", portAsStr)
 	if err != nil {

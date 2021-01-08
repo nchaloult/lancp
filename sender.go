@@ -64,6 +64,9 @@ func send(filePath string) error {
 		return fmt.Errorf("failed to send UDP broadcast message: %v", err)
 	}
 
+	// Display the generated passphrase for the receiver to send.
+	log.Printf("Passphrase: %s\n", generatedPassphrase)
+
 	// Listen for the response message from the receiver.
 	// TODO: Shrink buffer size once you've written passphrase generation logic.
 	passphrasePayloadBuf := make([]byte, 1024)
