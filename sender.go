@@ -49,7 +49,7 @@ func send(filePath string) error {
 
 	stdinReader := bufio.NewReader(os.Stdin)
 	// The log pkg doesn't let you print without a newline char at the end.
-	fmt.Print("Enter the passphrase on the receiver's machine:\n> ")
+	fmt.Print("Enter the passphrase displayed on the receiver's machine:\n> ")
 	userInput, err := stdinReader.ReadString('\n')
 	if err != nil {
 		// TODO: Should we handle the case where err == io.EOF differently?
