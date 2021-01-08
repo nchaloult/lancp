@@ -19,8 +19,7 @@ const port = 6969
 func send(filePath string) error {
 	log.Println("lancp running in send mode...")
 
-	// TODO: Generate passphrase that the receiver will need to present.
-	generatedPassphrase := "sender"
+	generatedPassphrase := generatePassphrase()
 
 	// Send broadcast message to find the device running in "receive mode".
 	localAddr, err := getPreferredOutboundAddr()

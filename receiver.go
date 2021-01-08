@@ -28,8 +28,7 @@ func receive() error {
 
 	log.Println("lancp running in receive mode...")
 
-	// TODO: Generate passphrase that the sender will need to present.
-	generatedPassphrase := "receiver"
+	generatedPassphrase := generatePassphrase()
 
 	// Listen for a broadcast message from the device running in "send mode."
 	udpConn, err := net.ListenPacket("udp4", portAsStr)
