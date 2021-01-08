@@ -61,6 +61,7 @@ func receive() error {
 	// Capture user input for the passphrase the sender is presenting.
 
 	stdinReader := bufio.NewReader(os.Stdin)
+	// The log pkg doesn't let you print without a newline char at the end.
 	fmt.Print("Enter the passphrase on the sender's machine:\n> ")
 	userInput, err := stdinReader.ReadString('\n')
 	if err != nil {
