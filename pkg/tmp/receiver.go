@@ -65,7 +65,7 @@ func Receive() error {
 		passphrasePayload, senderAddr.String())
 
 	// Capture user input for the passphrase the sender is presenting.
-	capturer, err := input.NewCapturer("➜", false)
+	capturer, err := input.NewCapturer("➜", false, os.Stdin, os.Stdout)
 	if err != nil {
 		return fmt.Errorf("failed to create a new Capturer: %v", err)
 	}

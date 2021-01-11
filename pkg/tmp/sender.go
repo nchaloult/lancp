@@ -48,7 +48,7 @@ func Send(filePath string) error {
 	}
 
 	// Capture user input for the passphrase the receiver is presenting.
-	capturer, err := input.NewCapturer("➜", true)
+	capturer, err := input.NewCapturer("➜", true, os.Stdin, os.Stdout)
 	if err != nil {
 		return fmt.Errorf("failed to create a new Capturer: %v", err)
 	}

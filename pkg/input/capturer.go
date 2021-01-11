@@ -3,7 +3,7 @@ package input
 import (
 	"bufio"
 	"fmt"
-	"os"
+	"io"
 	"strings"
 )
 
@@ -18,12 +18,21 @@ type Capturer struct {
 	// user for the passphrase displayed on the receiver's machine. It affects
 	// the prompt message that's printed to stdout.
 	isForReceiversPassphrase bool
+
+	// inputReader is the Reader interface where user input is read from. Should
+	// be os.Stdin in production. Helpful when writing tests.
+	inputReader io.Reader
+
+	// promptWriter is the Writer interface where prompts for input are printed/
+	// written. Should be os.Stdout in production. Helpful when writing tests.
+	promptWriter io.Writer
 }
 
 // NewCapturer returns a pointer to a new Capturer struct initialized with the
 // provided caret character.
 func NewCapturer(
 	caretCharacter string, isForReceiversPassphrase bool,
+	inputReader io.Reader, promptWriter io.Writer,
 ) (*Capturer, error) {
 	if len(caretCharacter) != 1 && len([]rune(caretCharacter)) != 1 {
 		return nil, fmt.Errorf("caretCharacter must be of length 1 (ideally"+
@@ -33,13 +42,15 @@ func NewCapturer(
 	return &Capturer{
 		CaretCharacter:           caretCharacter,
 		isForReceiversPassphrase: isForReceiversPassphrase,
+		inputReader:              inputReader,
+		promptWriter:             promptWriter,
 	}, nil
 }
 
 // CapturePassphrase prompts the user to enter the passphrase that's displayed
 // on the other machine running lancp, and returns their input.
 func (c *Capturer) CapturePassphrase() (string, error) {
-	stdinReader := bufio.NewReader(os.Stdin)
+	inputReader := bufio.NewReader(c.inputReader)
 
 	var machineName string
 	if c.isForReceiversPassphrase {
@@ -48,10 +59,11 @@ func (c *Capturer) CapturePassphrase() (string, error) {
 		machineName = "sender"
 	}
 	// The log pkg doesn't let you print without a newline char at the end.
-	fmt.Printf("Enter the passphrase displayed on the %s's machine:\n%s ",
+	fmt.Fprintf(c.promptWriter,
+		"Enter the passphrase displayed on the %s's machine:\n%s ",
 		machineName, c.CaretCharacter)
 
-	userInput, err := stdinReader.ReadString('\n')
+	userInput, err := inputReader.ReadString('\n')
 	if err != nil {
 		// TODO: Should we handle the case where err == io.EOF differently?
 		return "", fmt.Errorf("failed to read passphrase input from user: %v",
