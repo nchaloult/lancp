@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/nchaloult/lancp/pkg/input"
+	"github.com/nchaloult/lancp/pkg/passphrase"
 )
 
 // Send executes appropriate procedures when lancp is run in send mode. It
@@ -22,7 +23,7 @@ import (
 func Send(filePath string) error {
 	log.Println("lancp running in send mode...")
 
-	generatedPassphrase := generatePassphrase()
+	generatedPassphrase := passphrase.Generate()
 
 	// Send broadcast message to find the device running in "receive mode".
 	localAddr, err := getPreferredOutboundAddr()

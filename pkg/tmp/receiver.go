@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/nchaloult/lancp/pkg/input"
+	"github.com/nchaloult/lancp/pkg/passphrase"
 )
 
 // Receive executes appropriate procedures when lancp is run in receive mode. It
@@ -32,7 +33,7 @@ func Receive() error {
 
 	log.Println("lancp running in receive mode...")
 
-	generatedPassphrase := generatePassphrase()
+	generatedPassphrase := passphrase.Generate()
 
 	// Display the generated passphrase for the sender to send.
 	log.Printf("Passphrase: %s\n", generatedPassphrase)
