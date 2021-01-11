@@ -126,18 +126,19 @@ func Send(filePath string) error {
 
 	// Send file size to receiver.
 
-	// TODO: Pull file path from command-line args.
-	fileName := "main.go"
-	file, err := os.Open(fileName)
+	// TODO: should we try to look for and open this file on disk before we do
+	// any of the logic in this big Send() func? Maybe that could happen after
+	// we validate that the command line arg looks like a real path?
+	file, err := os.Open(filePath)
 	if err != nil {
-		return fmt.Errorf("failed to open file: %s: %v", fileName, err)
+		return fmt.Errorf("failed to open file: %s: %v", filePath, err)
 	}
 
 	// Send file size to receiver.
 	fileInfo, err := file.Stat()
 	if err != nil {
 		return fmt.Errorf("failed to retrieve info about the file %s: %v",
-			fileName, err)
+			filePath, err)
 	}
 	fileSize := strconv.FormatInt(fileInfo.Size(), 10)
 	tlsConn.Write([]byte(fileSize))
