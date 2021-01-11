@@ -14,8 +14,6 @@ import (
 	"strings"
 )
 
-const port = 6969
-
 // Send executes appropriate procedures when lancp is run in send mode. It
 // completes an initial passphrase handshake with a receiver, receives a TLS
 // certificate from the receiver, establishes a TLS connection with the

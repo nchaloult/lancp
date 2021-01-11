@@ -5,7 +5,10 @@ import (
 	"time"
 )
 
-const filePayloadBufSize = 8192
+const (
+	filePayloadBufSize = 8192
+	port               = 6969
+)
 
 // TODO: move someplace else during The Great Refactor (tm).
 //
