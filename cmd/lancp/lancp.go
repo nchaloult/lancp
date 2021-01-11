@@ -17,8 +17,6 @@ Usage:
 FILE is a path to a file that will be sent to the receiver.
 `
 
-const filePayloadBufSize = 8192
-
 func main() {
 	// Disable timestamps on messages.
 	// Why not use fmt instead, then? https://stackoverflow.com/a/19646964
