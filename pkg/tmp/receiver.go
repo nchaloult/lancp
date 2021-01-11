@@ -1,7 +1,6 @@
 package tmp
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/ed25519"
 	"crypto/rand"
@@ -16,8 +15,9 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"strings"
 	"time"
+
+	"github.com/nchaloult/lancp/pkg/input"
 )
 
 // Receive executes appropriate procedures when lancp is run in receive mode. It
@@ -65,18 +65,14 @@ func Receive() error {
 		passphrasePayload, senderAddr.String())
 
 	// Capture user input for the passphrase the sender is presenting.
-
-	stdinReader := bufio.NewReader(os.Stdin)
-	// The log pkg doesn't let you print without a newline char at the end.
-	fmt.Print("Enter the passphrase displayed on the sender's machine:\n> ")
-	userInput, err := stdinReader.ReadString('\n')
+	capturer, err := input.NewCapturer("➜", false)
 	if err != nil {
-		// TODO: Should we handle the case where err == io.EOF differently?
-		return fmt.Errorf("failed to read passphrase input from user: %v", err)
+		return fmt.Errorf("failed to create a new Capturer: %v", err)
 	}
-	// Convert all CRLF line endings to LF endings.
-	// TODO: Is this necessary? Even on Windows machines?
-	userInput = strings.Replace(userInput, "\n", "", -1)
+	userInput, err := capturer.CapturePassphrase()
+	if err != nil {
+		return err
+	}
 
 	// Send response message to sender.
 	_, err = udpConn.WriteTo([]byte(userInput), senderAddr)
