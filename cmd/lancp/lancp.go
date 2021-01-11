@@ -17,7 +17,7 @@ USAGE:
 
 FLAGS:
     -h, --help       Prints this usage information and exits
-	-v, --version    Prints version information and exits
+    -v, --version    Prints version information and exits
 
 ARGS:
     <file>    The path to a file to send
