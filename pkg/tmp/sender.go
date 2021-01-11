@@ -1,4 +1,4 @@
-package main
+package tmp
 
 import (
 	"bufio"
@@ -16,7 +16,11 @@ import (
 
 const port = 6969
 
-func send(filePath string) error {
+// Send executes appropriate procedures when lancp is run in send mode. It
+// completes an initial passphrase handshake with a receiver, receives a TLS
+// certificate from the receiver, establishes a TLS connection with the
+// receiver, and sends a file.
+func Send(filePath string) error {
 	log.Println("lancp running in send mode...")
 
 	generatedPassphrase := generatePassphrase()

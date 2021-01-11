@@ -1,4 +1,4 @@
-package main
+package tmp
 
 import (
 	"bufio"
@@ -20,7 +20,11 @@ import (
 	"time"
 )
 
-func receive() error {
+// Receive executes appropriate procedures when lancp is run in receive mode. It
+// completes an initial passphrase handshake with a sender, creates a
+// self-signed TLS certificate and sends it to the sender, establishes a TLS
+// connection with the sender, and receives a file.
+func Receive() error {
 	// TODO: Revisit where these are initialized. Find new homes for these once
 	// this big ass func is broken up into pieces.
 	portAsStr := fmt.Sprintf(":%d", port)
