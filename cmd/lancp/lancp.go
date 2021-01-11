@@ -8,13 +8,19 @@ import (
 	"github.com/nchaloult/lancp/pkg/tmp"
 )
 
-const usage = `lancp is a simple tool that lets you easily transfer files between two machines on the same network.
+const usage = `lancp
+A simple tool that lets you easily transfer files between two machines on the same network.
 
-Usage:
-    lancp send FILE
+USAGE:
+    lancp send <file>
     lancp receive
 
-FILE is a path to a file that will be sent to the receiver.
+FLAGS:
+    -h, --help       Prints this usage information and exits
+	-v, --version    Prints version information and exits
+
+ARGS:
+    <file>    The path to a file to send
 `
 
 func main() {
