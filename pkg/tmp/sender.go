@@ -54,7 +54,8 @@ func Send(filePath string) error {
 	}
 	userInput, err := capturer.CapturePassphrase()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to capture passphrase input from user: %v",
+			err)
 	}
 
 	_, err = udpConn.WriteTo([]byte(userInput), broadcastUDPAddr)

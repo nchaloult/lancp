@@ -66,8 +66,7 @@ func (c *Capturer) CapturePassphrase() (string, error) {
 	userInput, err := inputReader.ReadString('\n')
 	if err != nil {
 		// TODO: Should we handle the case where err == io.EOF differently?
-		return "", fmt.Errorf("failed to read passphrase input from user: %v",
-			err)
+		return "", err
 	}
 
 	// Convert all CRLF line endings to LF endings.
