@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/nchaloult/lancp/pkg/app"
 	"github.com/nchaloult/lancp/pkg/tmp"
 )
 
@@ -22,6 +23,10 @@ FLAGS:
 ARGS:
     <file>    The path to a file to send
 `
+
+// TODO: temporary! This config const should be read in from a global config,
+// or maybe even provided as a command-line arg.
+const port = 6969
 
 func main() {
 	// Disable timestamps on messages.
@@ -53,7 +58,11 @@ func main() {
 			printUsageAndExit()
 		}
 
-		if err := tmp.Receive(); err != nil {
+		cfg, err := app.NewReceiverConfig(port, port+1)
+		if err != nil {
+			printError(err)
+		}
+		if err := cfg.Receive(); err != nil {
 			printError(err)
 		}
 	default:
