@@ -85,7 +85,7 @@ func Receive() error {
 
 	// TODO: This called func lives in sender.go rn. Move this to some new
 	// shared location when you refactor everything.
-	localAddr, err := getPreferredOutboundAddr()
+	localAddr, err := net.GetPreferredOutboundAddr()
 	if err != nil {
 		return fmt.Errorf("failed to get this device's local IP address: %v",
 			err)
