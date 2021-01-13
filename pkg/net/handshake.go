@@ -61,7 +61,6 @@ func (hc *HandshakeConductor) getPassphraseFromSender() (string, _net.Addr, erro
 	payloadBuf := make([]byte, hc.passphrasePayloadBufSize)
 	n, senderAddr, err := hc.udpConn.ReadFrom(payloadBuf)
 	if err != nil {
-		hc.udpConn.Close()
 		return "", nil, err
 	}
 
