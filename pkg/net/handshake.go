@@ -2,6 +2,7 @@ package net
 
 import (
 	"fmt"
+	"log"
 	_net "net"
 )
 
@@ -41,6 +42,29 @@ func NewHandshakeConductor(
 // handshake are sent over UDP, which means that the caller may close the
 // net.PacketConn it created the HandshakeConductor with as soon as this method
 // returns.
-func (hc *HandshakeConductor) PerformHandshakeAsReceiver() {
-	return
+func (hc *HandshakeConductor) PerformHandshakeAsReceiver() error {
+	senderPayload, senderAddr, err := hc.getPassphraseFromSender()
+	if err != nil {
+		return fmt.Errorf("failed to read broadcast message from sender: %v",
+			err)
+	}
+
+	log.Printf("senderPayload: %q\tsenderAddr: %v\n", senderPayload, senderAddr)
+
+	return nil
+}
+
+// getPassphraseFromSender performs the initial step of the handshake as the
+// receiver. It blocks until a sender sends a UDP broadcast message with a
+// passphrase as its payload, and returns that payload.
+func (hc *HandshakeConductor) getPassphraseFromSender() (string, _net.Addr, error) {
+	payloadBuf := make([]byte, hc.passphrasePayloadBufSize)
+	n, senderAddr, err := hc.udpConn.ReadFrom(payloadBuf)
+	if err != nil {
+		hc.udpConn.Close()
+		return "", nil, err
+	}
+
+	payload := string(payloadBuf[:n])
+	return payload, senderAddr, nil
 }
