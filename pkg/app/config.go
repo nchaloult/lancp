@@ -45,3 +45,21 @@ func NewSenderConfig(filePath string, port, tlsPort int) (*Config, error) {
 		TLSPort:  tlsPortAsString,
 	}, nil
 }
+
+// NewReceiverConfig returns a pointer to a new Config struct intended for use
+// by lancp running in receive mode.
+func NewReceiverConfig(port, tlsPort int) (*Config, error) {
+	portAsString, err := net.GetPortAsString(port)
+	if err != nil {
+		return nil, err
+	}
+	tlsPortAsString, err := net.GetPortAsString(tlsPort)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Config{
+		Port:    portAsString,
+		TLSPort: tlsPortAsString,
+	}, nil
+}
