@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/nchaloult/lancp/pkg/app"
-	"github.com/nchaloult/lancp/pkg/tmp"
 )
 
 const usage = `lancp
@@ -50,7 +49,12 @@ func main() {
 		// TODO: write a function somewhere which makes sure that file actually
 		// exists on disk.
 		filePath := os.Args[2]
-		if err := tmp.Send(filePath); err != nil {
+
+		cfg, err := app.NewSenderConfig(filePath, port, port+1)
+		if err != nil {
+			printError(err)
+		}
+		if err := cfg.Send(); err != nil {
 			printError(err)
 		}
 	case "receive":

@@ -1,7 +1,6 @@
 package net
 
 import (
-	"fmt"
 	_net "net"
 	"strings"
 )
@@ -30,20 +29,13 @@ func GetPreferredOutboundAddr() (_net.IP, error) {
 // https://stackoverflow.com/a/37382208
 func GetBroadcastAddr(
 	preferredOutboundAddr string,
-	port int,
+	port string,
 ) (string, error) {
-	// Validate input.
-	if port <= 1024 || port > 65535 {
-		return "", fmt.Errorf("port must be in the range (1024, 65535]."+
-			" got: %d", port)
-	}
-
 	// Remove host bytes.
 	hostBytesIndex := strings.LastIndex(preferredOutboundAddr, ".")
 	broadcastAddr := preferredOutboundAddr[:hostBytesIndex]
 	// Tack on broadcast host (all 1s) & the port number.
-	portAsStr := fmt.Sprintf(":%d", port)
-	broadcastAddr += ".255" + portAsStr
+	broadcastAddr += ".255" + port
 
 	return broadcastAddr, nil
 }
