@@ -2,17 +2,17 @@ package tmp
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
-	"net"
+	_net "net"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/nchaloult/lancp/pkg/input"
+	"github.com/nchaloult/lancp/pkg/net"
 	"github.com/nchaloult/lancp/pkg/passphrase"
 )
 
@@ -36,13 +36,13 @@ func Send(filePath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to get UDP broadcast address: %v", err)
 	}
-	broadcastUDPAddr, err := net.ResolveUDPAddr("udp4", broadcastAddr)
+	broadcastUDPAddr, err := _net.ResolveUDPAddr("udp4", broadcastAddr)
 	if err != nil {
 		return fmt.Errorf("failed to turn broadcast addr into UDPAddr struct:"+
 			" %v", err)
 	}
 	// https://github.com/aler9/howto-udp-broadcast-golang
-	udpConn, err := net.ListenPacket("udp4", fmt.Sprintf(":%d", port))
+	udpConn, err := _net.ListenPacket("udp4", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return fmt.Errorf("failed to stand up local UDP packet announcer: %v",
 			err)
@@ -100,7 +100,7 @@ func Send(filePath string) error {
 		passphrasePayload, receiverAddr.String())
 
 	// Get TLS certificate from receiver through an insecure TCP conn.
-	tcpConn, err := net.Dial("tcp", receiverAddr.String())
+	tcpConn, err := _net.Dial("tcp", receiverAddr.String())
 	if err != nil {
 		return fmt.Errorf("failed to establish TCP connection with sender: %v",
 			err)
@@ -113,7 +113,7 @@ func Send(filePath string) error {
 	tcpConn.Close()
 
 	// Connect to the receiver's TLS conn with that cert.
-	tlsCfg := getSenderTLSConfig(cert)
+	tlsCfg := net.GetSenderTLSConfig(cert)
 	// TODO: Wow this is a scuffed way to get the receiver's TLS addr.
 	receiverIP := receiverAddr.String()[:len(receiverAddr.String())-5]
 	tlsConn, err := tls.Dial(
@@ -162,13 +162,13 @@ func Send(filePath string) error {
 // getPreferredOutboundAddr finds this device's preferred outbound IPv4 address
 // on its local network. It prepares to send a UDP datagram to Google's DNS, but
 // doesn't actually send one.
-func getPreferredOutboundAddr() (net.IP, error) {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
+func getPreferredOutboundAddr() (_net.IP, error) {
+	conn, err := _net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Close()
-	preferredOutboundAddr := conn.LocalAddr().(*net.UDPAddr)
+	preferredOutboundAddr := conn.LocalAddr().(*_net.UDPAddr)
 
 	return preferredOutboundAddr.IP, nil
 }
@@ -199,17 +199,4 @@ func getBroadcastAddr(
 	broadcastAddr += ".255" + portAsStr
 
 	return broadcastAddr, nil
-}
-
-// getSenderTLSConfig builds a tls.Config object for the sender to use when
-// establishing a TLS connection with the receiver. It adds the public key of
-// the certificate authority that the receiver created to the config's
-// collection of trusted certificate authorities.
-func getSenderTLSConfig(certPEM []byte) *tls.Config {
-	certPool := x509.NewCertPool()
-	certPool.AppendCertsFromPEM(certPEM)
-
-	return &tls.Config{
-		RootCAs: certPool,
-	}
 }
