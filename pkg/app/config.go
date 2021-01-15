@@ -239,6 +239,8 @@ func (c *Config) Send() error {
 	generatedPassphrase := passphrase.Generate()
 
 	// Send broadcast message to find the device running in "receive mode".
+
+	// Get UDP broadcast address.
 	localAddr, err := net.GetPreferredOutboundAddr()
 	if err != nil {
 		return fmt.Errorf("failed to get this device's local IP address: %v",
@@ -255,7 +257,7 @@ func (c *Config) Send() error {
 			" %v", err)
 	}
 
-	// https://github.com/aler9/howto-udp-broadcast-golang
+	// Create a UDP listener for HandshakeConductor to use.
 	udpConn, err := _net.ListenPacket("udp4", c.Port)
 	if err != nil {
 		return fmt.Errorf("failed to stand up local UDP packet announcer: %v",
