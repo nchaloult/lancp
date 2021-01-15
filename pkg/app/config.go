@@ -10,7 +10,6 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/nchaloult/lancp/pkg/input"
 	"github.com/nchaloult/lancp/pkg/net"
 	"github.com/nchaloult/lancp/pkg/passphrase"
 )
@@ -264,58 +263,29 @@ func (c *Config) Send() error {
 			err)
 	}
 
-	// Capture user input for the passphrase the receiver is presenting.
-	capturer, err := input.NewCapturer("➜", true, os.Stdin, os.Stdout)
-	if err != nil {
-		return fmt.Errorf("failed to create a new Capturer: %v", err)
-	}
-	userInput, err := capturer.CapturePassphrase()
-	if err != nil {
-		return fmt.Errorf("failed to capture passphrase input from user: %v",
-			err)
-	}
-
-	_, err = udpConn.WriteTo([]byte(userInput), broadcastUDPAddr)
+	// Have a HandshakeConductor perform the sender's responsibilities of the
+	// lancp handshake.
+	hc, err := net.NewHandshakeConductor(
+		udpConn,
+		passphrasePayloadBufSize,
+		generatedPassphrase,
+		localAddrAsStr+c.Port,
+	)
 	if err != nil {
 		udpConn.Close()
-		return fmt.Errorf("failed to send UDP broadcast message: %v", err)
+		return fmt.Errorf("failed to create a new HandshakeConductor: %v", err)
 	}
-
-	// Display the generated passphrase for the receiver to send.
-	log.Printf("Passphrase: %s\n", generatedPassphrase)
-
-	// Listen for the response message from the receiver.
-	// TODO: Shrink buffer size once you've written passphrase generation logic.
-	passphrasePayloadBuf := make([]byte, 1024)
-	n, receiverAddr, err := udpConn.ReadFrom(passphrasePayloadBuf)
-	// Ignore messages from ourself (like the broadcast message we just sent
-	// out).
-	//
-	// TODO: this is a scuffed way of getting a receiver address to compare.
-	if receiverAddr.String() == localAddrAsStr+c.Port {
-		// Discard our own broadcast message and continue listening for one more
-		// message.
-		n, receiverAddr, err = udpConn.ReadFrom(passphrasePayloadBuf)
-	}
+	receiverAddr, err := hc.PerformHandshakeAsSender(broadcastUDPAddr)
 	if err != nil {
 		udpConn.Close()
-		return fmt.Errorf("failed to read response message from receiver: %v",
-			err)
+		return fmt.Errorf("failed to perform the sender's responsibilities"+
+			" in the lancp handshake: %v", err)
 	}
-	passphrasePayload := string(passphrasePayloadBuf[:n])
 
 	// At this point, we aren't expecting to get any more UDP datagrams from the
 	// receiver. Since UDP is a stateless protocol, we can close the PacketConn
 	// on our end.
 	udpConn.Close()
-
-	// Compare payload with expected payload.
-	if passphrasePayload != generatedPassphrase {
-		return fmt.Errorf("got %q from %s, want %q",
-			passphrasePayload, receiverAddr.String(), generatedPassphrase)
-	}
-	log.Printf("got %q from %s, matched expected passphrase",
-		passphrasePayload, receiverAddr.String())
 
 	// Get TLS certificate from receiver through an insecure TCP conn.
 	tcpConn, err := _net.Dial("tcp", receiverAddr.String())
