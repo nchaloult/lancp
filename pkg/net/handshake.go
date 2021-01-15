@@ -2,7 +2,6 @@ package net
 
 import (
 	"fmt"
-	"log"
 	_net "net"
 )
 
@@ -13,15 +12,20 @@ const (
 
 // HandshakeConductor carries out the choreographed procedures for lancp's
 // device discovery and identity validation handshake.
+//
+// TODO: write explanatory comments for each of the fields.
 type HandshakeConductor struct {
 	udpConn                  _net.PacketConn
 	passphrasePayloadBufSize uint
+	expectedPassphrase       string
 }
 
 // NewHandshakeConductor returns a pointer to a new HandshakeConductor
 // initialized with the provided fields.
 func NewHandshakeConductor(
-	udpConn _net.PacketConn, passphrasePayloadBufSize uint,
+	udpConn _net.PacketConn,
+	passphrasePayloadBufSize uint,
+	expectedPassphrase string,
 ) (*HandshakeConductor, error) {
 	if passphrasePayloadBufSize < minPassphrasePayloadBufSize ||
 		passphrasePayloadBufSize > maxPassphrasePayloadBufSize {
@@ -30,7 +34,11 @@ func NewHandshakeConductor(
 			maxPassphrasePayloadBufSize, passphrasePayloadBufSize)
 	}
 
-	return &HandshakeConductor{udpConn, passphrasePayloadBufSize}, nil
+	return &HandshakeConductor{
+		udpConn,
+		passphrasePayloadBufSize,
+		expectedPassphrase,
+	}, nil
 }
 
 // PerformHandshakeAsReceiver waits for a sender to reach out and attempt to
@@ -49,7 +57,10 @@ func (hc *HandshakeConductor) PerformHandshakeAsReceiver() error {
 			err)
 	}
 
-	log.Printf("senderPayload: %q\tsenderAddr: %v\n", senderPayload, senderAddr)
+	if senderPayload != hc.expectedPassphrase {
+		return fmt.Errorf("got passphrase: %q from sender, want %q",
+			senderPayload, hc.expectedPassphrase)
+	}
 
 	return nil
 }
