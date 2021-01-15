@@ -87,8 +87,6 @@ func (c *Config) Receive() error {
 	log.Println("lancp running in receive mode...")
 
 	generatedPassphrase := passphrase.Generate()
-	// Display the generated passphrase for the sender to send.
-	log.Printf("Passphrase: %s\n", generatedPassphrase)
 
 	// Create a UDP listener for HandshakeConductor to use.
 	udpConn, err := _net.ListenPacket("udp4", c.Port)

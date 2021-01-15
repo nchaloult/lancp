@@ -58,6 +58,9 @@ func NewHandshakeConductor(
 // net.PacketConn it created the HandshakeConductor with as soon as this method
 // returns.
 func (hc *HandshakeConductor) PerformHandshakeAsReceiver() error {
+	// Display the expected passphrase for the sender to send.
+	log.Printf("Passphrase: %s\n", hc.expectedPassphrase)
+
 	// Listen for a broadcast message from a sender.
 	senderPayload, senderAddr, err := hc.getPassphraseFromMessage()
 	if err != nil {
@@ -125,7 +128,7 @@ func (hc *HandshakeConductor) PerformHandshakeAsSender(
 		return nil, fmt.Errorf("failed to send UDP broadcast message: %v", err)
 	}
 
-	// Display the generated passphrase for the receiver to send.
+	// Display the expected passphrase for the receiver to send.
 	log.Printf("Passphrase: %s\n", hc.expectedPassphrase)
 
 	// Listen for a broadcast message from a receiver.
