@@ -122,8 +122,6 @@ func (c *Config) Receive() error {
 	// Begin standing up TCP server to exchange cert, and prepare to establish a
 	// TLS connection with the sender.
 
-	// TODO: This called func lives in sender.go rn. Move this to some new
-	// shared location when you refactor everything.
 	localAddr, err := net.GetPreferredOutboundAddr()
 	if err != nil {
 		return fmt.Errorf("failed to get this device's local IP address: %v",
