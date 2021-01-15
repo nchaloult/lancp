@@ -209,6 +209,11 @@ func (c *Config) Receive() error {
 		if (fileSize - receivedBytes) < filePayloadBufSize {
 			io.CopyN(file, tlsConn, (fileSize - receivedBytes))
 			tlsConn.Read(make([]byte, (receivedBytes+filePayloadBufSize)-fileSize))
+
+			// Set receivedBytes so that the correct number of bytes received
+			// will be displayed to the user.
+			receivedBytes = fileSize
+
 			break
 		}
 
