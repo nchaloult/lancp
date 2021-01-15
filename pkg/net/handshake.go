@@ -3,6 +3,9 @@ package net
 import (
 	"fmt"
 	_net "net"
+	"os"
+
+	"github.com/nchaloult/lancp/pkg/input"
 )
 
 const (
@@ -62,6 +65,23 @@ func (hc *HandshakeConductor) PerformHandshakeAsReceiver() error {
 	if senderPayload != hc.expectedPassphrase {
 		return fmt.Errorf("got passphrase: %q from sender, want %q",
 			senderPayload, hc.expectedPassphrase)
+	}
+
+	// Capture user input for the passphrase the sender is presenting.
+	capturer, err := input.NewCapturer("➜", false, os.Stdin, os.Stdout)
+	if err != nil {
+		return fmt.Errorf("failed to create a new Capturer: %v", err)
+	}
+	userInput, err := capturer.CapturePassphrase()
+	if err != nil {
+		return err
+	}
+
+	// Send response message to sender with its guess for the sender's
+	// passphrase.
+	_, err = hc.udpConn.WriteTo([]byte(userInput), senderAddr)
+	if err != nil {
+		return fmt.Errorf("failed to send response message to sender: %v", err)
 	}
 
 	return nil
