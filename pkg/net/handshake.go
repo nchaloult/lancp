@@ -51,12 +51,14 @@ func NewHandshakeConductor(
 // net.PacketConn it created the HandshakeConductor with as soon as this method
 // returns.
 func (hc *HandshakeConductor) PerformHandshakeAsReceiver() error {
+	// Listen for a broadcast message from a sender.
 	senderPayload, senderAddr, err := hc.getPassphraseFromSender()
 	if err != nil {
 		return fmt.Errorf("failed to read broadcast message from sender: %v",
 			err)
 	}
 
+	// Check the sender's passphrase.
 	if senderPayload != hc.expectedPassphrase {
 		return fmt.Errorf("got passphrase: %q from sender, want %q",
 			senderPayload, hc.expectedPassphrase)
