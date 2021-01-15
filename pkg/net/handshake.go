@@ -2,6 +2,7 @@ package net
 
 import (
 	"fmt"
+	"log"
 	_net "net"
 	"os"
 
@@ -85,6 +86,56 @@ func (hc *HandshakeConductor) PerformHandshakeAsReceiver() error {
 	_, err = hc.udpConn.WriteTo([]byte(userInput), senderAddr)
 	if err != nil {
 		return fmt.Errorf("failed to send response message to sender: %v", err)
+	}
+
+	return nil
+}
+
+// PerformHandshakeAsSender begins the lancp handshake process. It reads in a
+// passphrase guess from the user, sends it in a UDP broadcast message, waits
+// for a response from a receiver, and checks that receiver's passphrase guess.
+//
+// All of the messages exchanged between a sender and receiver during this
+// handshake are sent over UDP, which means that the caller may close the
+// net.PacketConn it created the HandshakeConductor with as soon as this method
+// returns.
+//
+// TODO: should broadcastUDPAddr be passed in as a parameter like this? Is
+// HandshakeConductor responsible for too much? Should we have one version for
+// the receiver to use, and another for the sender?
+func (hc *HandshakeConductor) PerformHandshakeAsSender(
+	broadcastUDPAddr *_net.UDPAddr,
+) error {
+	// Capture user input for the passphrase the receiver is presenting.
+	capturer, err := input.NewCapturer("➜", true, os.Stdin, os.Stdout)
+	if err != nil {
+		return fmt.Errorf("failed to create a new Capturer: %v", err)
+	}
+	userInput, err := capturer.CapturePassphrase()
+	if err != nil {
+		return fmt.Errorf("failed to capture passphrase input from user: %v",
+			err)
+	}
+
+	_, err = hc.udpConn.WriteTo([]byte(userInput), broadcastUDPAddr)
+	if err != nil {
+		return fmt.Errorf("failed to send UDP broadcast message: %v", err)
+	}
+
+	// Display the generated passphrase for the receiver to send.
+	log.Printf("Passphrase: %s\n", hc.expectedPassphrase)
+
+	// Listen for a broadcast message from a receiver.
+	receiverPayload, _, err := hc.getPassphraseFromMessage()
+	if err != nil {
+		return fmt.Errorf("failed to read broadcast message from sender: %v",
+			err)
+	}
+
+	// Check the receiver's passphrase.
+	if receiverPayload != hc.expectedPassphrase {
+		return fmt.Errorf("got passphrase: %q from receiver, want %q",
+			receiverPayload, hc.expectedPassphrase)
 	}
 
 	return nil
