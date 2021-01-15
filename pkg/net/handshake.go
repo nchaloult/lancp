@@ -100,45 +100,48 @@ func (hc *HandshakeConductor) PerformHandshakeAsReceiver() error {
 // net.PacketConn it created the HandshakeConductor with as soon as this method
 // returns.
 //
+// Returns the receiver's address so that we can attempt to establish a TCP
+// connection with that address later.
+//
 // TODO: should broadcastUDPAddr be passed in as a parameter like this? Is
 // HandshakeConductor responsible for too much? Should we have one version for
 // the receiver to use, and another for the sender?
 func (hc *HandshakeConductor) PerformHandshakeAsSender(
 	broadcastUDPAddr *_net.UDPAddr,
-) error {
+) (_net.Addr, error) {
 	// Capture user input for the passphrase the receiver is presenting.
 	capturer, err := input.NewCapturer("➜", true, os.Stdin, os.Stdout)
 	if err != nil {
-		return fmt.Errorf("failed to create a new Capturer: %v", err)
+		return nil, fmt.Errorf("failed to create a new Capturer: %v", err)
 	}
 	userInput, err := capturer.CapturePassphrase()
 	if err != nil {
-		return fmt.Errorf("failed to capture passphrase input from user: %v",
-			err)
+		return nil, fmt.Errorf("failed to capture passphrase input from user:"+
+			" %v", err)
 	}
 
 	_, err = hc.udpConn.WriteTo([]byte(userInput), broadcastUDPAddr)
 	if err != nil {
-		return fmt.Errorf("failed to send UDP broadcast message: %v", err)
+		return nil, fmt.Errorf("failed to send UDP broadcast message: %v", err)
 	}
 
 	// Display the generated passphrase for the receiver to send.
 	log.Printf("Passphrase: %s\n", hc.expectedPassphrase)
 
 	// Listen for a broadcast message from a receiver.
-	receiverPayload, _, err := hc.getPassphraseFromMessage()
+	receiverPayload, returnAddr, err := hc.getPassphraseFromMessage()
 	if err != nil {
-		return fmt.Errorf("failed to read broadcast message from sender: %v",
+		return nil, fmt.Errorf("failed to read broadcast message from sender: %v",
 			err)
 	}
 
 	// Check the receiver's passphrase.
 	if receiverPayload != hc.expectedPassphrase {
-		return fmt.Errorf("got passphrase: %q from receiver, want %q",
+		return nil, fmt.Errorf("got passphrase: %q from receiver, want %q",
 			receiverPayload, hc.expectedPassphrase)
 	}
 
-	return nil
+	return returnAddr, nil
 }
 
 // getPassphraseFromMessage blocks until it receives a UDP message with a
