@@ -104,9 +104,11 @@ func (c *Config) Receive() error {
 		udpConn, passphrasePayloadBufSize, generatedPassphrase,
 	)
 	if err != nil {
+		udpConn.Close()
 		return fmt.Errorf("failed to create a new HandshakeConductor: %v", err)
 	}
 	if err = hc.PerformHandshakeAsReceiver(); err != nil {
+		udpConn.Close()
 		return fmt.Errorf("failed to perform the receiver's responsibilities"+
 			" in the lancp handshake: %v", err)
 	}
