@@ -17,7 +17,10 @@ import (
 
 // TODO: temporary! This config const should be read in from a global config,
 // or maybe even provided as a command-line arg.
-const filePayloadBufSize = 8192
+const (
+	passphrasePayloadBufSize = 32
+	filePayloadBufSize       = 8192
+)
 
 // Config stores input from command line arguments as well as configs set
 // globally. It exposes lancp's core functionality, like running in send and
@@ -85,57 +88,35 @@ func (c *Config) Receive() error {
 	log.Println("lancp running in receive mode...")
 
 	generatedPassphrase := passphrase.Generate()
-
 	// Display the generated passphrase for the sender to send.
 	log.Printf("Passphrase: %s\n", generatedPassphrase)
 
-	// Listen for a broadcast message from the device running in "send mode."
+	// Create a UDP listener for HandshakeConductor to use.
 	udpConn, err := _net.ListenPacket("udp4", c.Port)
 	if err != nil {
 		return fmt.Errorf("failed to stand up local UDP packet announcer: %v",
 			err)
 	}
 
-	// Capture the payload that the sender included in their broadcast message.
-	// TODO: Shrink buffer size once you've written passphrase generation logic.
-	passphrasePayloadBuf := make([]byte, 1024)
-	n, senderAddr, err := udpConn.ReadFrom(passphrasePayloadBuf)
+	// Have a HandshakeConductor perform the receiver's responsibilities of the
+	// lancp handshake.
+	hc, err := net.NewHandshakeConductor(
+		udpConn, passphrasePayloadBufSize, generatedPassphrase,
+	)
 	if err != nil {
-		udpConn.Close()
-		return fmt.Errorf("failed to read broadcast message from sender: %v",
-			err)
+		return fmt.Errorf("failed to create a new HandshakeConductor: %v", err)
 	}
-	passphrasePayload := string(passphrasePayloadBuf[:n])
-
-	// Compare payload with expected payload.
-	if passphrasePayload != generatedPassphrase {
-		udpConn.Close()
-		return fmt.Errorf("got %q from %s, want %q",
-			passphrasePayload, senderAddr.String(), generatedPassphrase)
-	}
-	log.Printf("got %q from %s, matched expected passphrase",
-		passphrasePayload, senderAddr.String())
-
-	// Capture user input for the passphrase the sender is presenting.
-	capturer, err := input.NewCapturer("➜", false, os.Stdin, os.Stdout)
-	if err != nil {
-		return fmt.Errorf("failed to create a new Capturer: %v", err)
-	}
-	userInput, err := capturer.CapturePassphrase()
-	if err != nil {
-		return err
+	if err = hc.PerformHandshakeAsReceiver(); err != nil {
+		return fmt.Errorf("failed to perform the receiver's responsibilities"+
+			" in the lancp handshake: %v", err)
 	}
 
-	// Send response message to sender.
-	_, err = udpConn.WriteTo([]byte(userInput), senderAddr)
-	if err != nil {
-		udpConn.Close()
-		return fmt.Errorf("failed to send response message to sender: %v", err)
-	}
-
-	// Even though the sender hasn't had time to receive and parse the response
-	// UDP datagram we just sent, we can close the PacketConn on our end since
-	// UDP is a stateless protocol.
+	// Even though the sender hasn't had time to complete it's last piece of the
+	// handshake (check the passphrase guess that we sent), we can close the
+	// UDP listener on our end since UDP is a stateless protocol.
+	//
+	// If the sender decides we sent the wrong passphrase, it just won't attempt
+	// to establish a TCP connection with us, and we'll time out.
 	udpConn.Close()
 
 	// Begin standing up TCP server to exchange cert, and prepare to establish a
@@ -213,7 +194,7 @@ func (c *Config) Receive() error {
 
 	// TODO: Is this an okay size for this buffer? How big could it ever get?
 	fileSizeBuf := make([]byte, 10)
-	n, err = tlsConn.Read(fileSizeBuf)
+	n, err := tlsConn.Read(fileSizeBuf)
 	if err != nil {
 		return fmt.Errorf("failed to read file size from sender: %v", err)
 	}
