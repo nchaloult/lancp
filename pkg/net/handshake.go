@@ -21,6 +21,7 @@ type HandshakeConductor struct {
 	udpConn                  _net.PacketConn
 	passphrasePayloadBufSize uint
 	expectedPassphrase       string
+	ourAddr                  string
 }
 
 // NewHandshakeConductor returns a pointer to a new HandshakeConductor
@@ -29,6 +30,7 @@ func NewHandshakeConductor(
 	udpConn _net.PacketConn,
 	passphrasePayloadBufSize uint,
 	expectedPassphrase string,
+	ourAddr string,
 ) (*HandshakeConductor, error) {
 	if passphrasePayloadBufSize < minPassphrasePayloadBufSize ||
 		passphrasePayloadBufSize > maxPassphrasePayloadBufSize {
@@ -41,6 +43,7 @@ func NewHandshakeConductor(
 		udpConn,
 		passphrasePayloadBufSize,
 		expectedPassphrase,
+		ourAddr,
 	}, nil
 }
 
@@ -55,7 +58,7 @@ func NewHandshakeConductor(
 // returns.
 func (hc *HandshakeConductor) PerformHandshakeAsReceiver() error {
 	// Listen for a broadcast message from a sender.
-	senderPayload, senderAddr, err := hc.getPassphraseFromSender()
+	senderPayload, senderAddr, err := hc.getPassphraseFromMessage()
 	if err != nil {
 		return fmt.Errorf("failed to read broadcast message from sender: %v",
 			err)
@@ -87,16 +90,22 @@ func (hc *HandshakeConductor) PerformHandshakeAsReceiver() error {
 	return nil
 }
 
-// getPassphraseFromSender performs the initial step of the handshake as the
-// receiver. It blocks until a sender sends a UDP broadcast message with a
-// passphrase as its payload, and returns that payload.
-func (hc *HandshakeConductor) getPassphraseFromSender() (string, _net.Addr, error) {
+// getPassphraseFromMessage blocks until it receives a UDP message with a
+// passphrase guess as its payload, and returns that payload. It discards
+// its own messages, like broadcast messages that get delivered to itself.
+func (hc *HandshakeConductor) getPassphraseFromMessage() (string, _net.Addr, error) {
 	payloadBuf := make([]byte, hc.passphrasePayloadBufSize)
-	n, senderAddr, err := hc.udpConn.ReadFrom(payloadBuf)
+	n, returnAddr, err := hc.udpConn.ReadFrom(payloadBuf)
 	if err != nil {
 		return "", nil, err
 	}
 
+	if returnAddr.String() == hc.ourAddr {
+		// Discard our own broadcast message and continue listening for one more
+		// message.
+		n, returnAddr, err = hc.udpConn.ReadFrom(payloadBuf)
+	}
+
 	payload := string(payloadBuf[:n])
-	return payload, senderAddr, nil
+	return payload, returnAddr, nil
 }

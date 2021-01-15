@@ -100,8 +100,15 @@ func (c *Config) Receive() error {
 
 	// Have a HandshakeConductor perform the receiver's responsibilities of the
 	// lancp handshake.
+	localAddr, err := net.GetPreferredOutboundAddr()
+	if err != nil {
+		return fmt.Errorf("failed to get this device's local IP address: %v",
+			err)
+	}
+	localAddrAsStr := localAddr.String()
+	localAddrAsStr += c.Port
 	hc, err := net.NewHandshakeConductor(
-		udpConn, passphrasePayloadBufSize, generatedPassphrase,
+		udpConn, passphrasePayloadBufSize, generatedPassphrase, localAddrAsStr,
 	)
 	if err != nil {
 		udpConn.Close()
@@ -123,12 +130,6 @@ func (c *Config) Receive() error {
 
 	// Begin standing up TCP server to exchange cert, and prepare to establish a
 	// TLS connection with the sender.
-
-	localAddr, err := net.GetPreferredOutboundAddr()
-	if err != nil {
-		return fmt.Errorf("failed to get this device's local IP address: %v",
-			err)
-	}
 
 	// Generate self-signed TLS cert.
 	cert, err := net.GenerateSelfSignedCert(localAddr)
