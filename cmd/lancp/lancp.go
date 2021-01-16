@@ -9,7 +9,7 @@ import (
 )
 
 const usage = `lancp
-A simple tool that lets you easily transfer files between two machines on the same network.
+A simple tool for easily transferring files between two machines on the same network.
 
 USAGE:
     lancp send <file>
