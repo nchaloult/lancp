@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/nchaloult/lancp/pkg/file"
 	"github.com/nchaloult/lancp/pkg/net"
 	"github.com/nchaloult/lancp/pkg/passphrase"
 )
@@ -197,29 +198,18 @@ func (c *Config) Receive() error {
 	//
 	// TODO: Read the file name that the sender sends first. Right now, the file
 	// name is hard-coded by the receiver.
-	file, err := os.Create("from-sender")
+	receivedFile, err := os.Create("from-sender")
 	if err != nil {
 		return fmt.Errorf("failed to create a new file on disk: %v", err)
 	}
-	defer file.Close()
+	defer receivedFile.Close()
 
 	// Write that payload to a file on disk.
-	var receivedBytes int64
-	for {
-		if (fileSize - receivedBytes) < filePayloadBufSize {
-			io.CopyN(file, tlsConn, (fileSize - receivedBytes))
-			tlsConn.Read(make([]byte, (receivedBytes+filePayloadBufSize)-fileSize))
-
-			// Set receivedBytes so that the correct number of bytes received
-			// will be displayed to the user.
-			receivedBytes = fileSize
-
-			break
-		}
-
-		io.CopyN(file, tlsConn, filePayloadBufSize)
-		receivedBytes += filePayloadBufSize
+	fileReceiver, err := file.NewReceiver(filePayloadBufSize)
+	if err != nil {
+		return fmt.Errorf("failed to create new FileReceiver: %v", err)
 	}
+	receivedBytes := fileReceiver.WritePayloadToFile(receivedFile, fileSize, tlsConn)
 
 	log.Printf("received %d bytes from sender\n", receivedBytes)
 
