@@ -140,7 +140,7 @@ func (c *Config) Receive() error {
 	if err != nil {
 		return fmt.Errorf("failed to start a TCP listener: %v", err)
 	}
-	// Block until the sender initiates the handshake.
+	// Block until the sender attempts to establish a TCP connection with us.
 	tcpConn, err := tcpLn.Accept()
 	if err != nil {
 		return fmt.Errorf("failed to establish TCP connection with sender: %v",
@@ -177,17 +177,6 @@ func (c *Config) Receive() error {
 	}
 	defer tlsConn.Close()
 
-	// Create a file on disk that will eventually store the payload we receive
-	// from the sender.
-	//
-	// TODO: Read the file name that the sender sends first. Right now, the file
-	// name is hard-coded by the receiver.
-	file, err := os.Create("from-sender")
-	if err != nil {
-		return fmt.Errorf("failed to create a new file on disk: %v", err)
-	}
-	defer file.Close()
-
 	// Receive file's bytes from the sender.
 
 	// TODO: Is this an okay size for this buffer? How big could it ever get?
@@ -202,6 +191,17 @@ func (c *Config) Receive() error {
 		return fmt.Errorf("failed to convert %q to an int: %v",
 			fileSizeAsStr, err)
 	}
+
+	// Create a file on disk that will eventually store the payload we receive
+	// from the sender.
+	//
+	// TODO: Read the file name that the sender sends first. Right now, the file
+	// name is hard-coded by the receiver.
+	file, err := os.Create("from-sender")
+	if err != nil {
+		return fmt.Errorf("failed to create a new file on disk: %v", err)
+	}
+	defer file.Close()
 
 	// Write that payload to a file on disk.
 	var receivedBytes int64
