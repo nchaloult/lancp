@@ -9,6 +9,7 @@ import (
 	_net "net"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/nchaloult/lancp/pkg/net"
 	"github.com/nchaloult/lancp/pkg/passphrase"
@@ -20,6 +21,8 @@ import (
 const (
 	passphrasePayloadBufSize = 32
 	filePayloadBufSize       = 8192
+	timeout                  = time.Second
+	handshakeTimeout         = 60 * time.Second
 )
 
 // Config stores input from command line arguments as well as configs set
@@ -95,6 +98,10 @@ func (c *Config) Receive() error {
 		return fmt.Errorf("failed to stand up local UDP packet announcer: %v",
 			err)
 	}
+	// TODO: The error that's displayed to the user when this timeout period is
+	// up is real nasty. Perhaps create your own error types that you can switch
+	// on and write pretty messages for somewhere?
+	udpConn.SetDeadline(time.Now().Add(handshakeTimeout))
 
 	// Have a HandshakeConductor perform the receiver's responsibilities of the
 	// lancp handshake.
@@ -147,6 +154,10 @@ func (c *Config) Receive() error {
 		return fmt.Errorf("failed to establish TCP connection with sender: %v",
 			err)
 	}
+	// TODO: The error that's displayed to the user when this timeout period is
+	// up is real nasty. Perhaps create your own error types that you can switch
+	// on and write pretty messages for somewhere?
+	tcpConn.SetDeadline(time.Now().Add(timeout))
 
 	// Send TLS certificate to the sender.
 	tcpConn.Write(cert.Bytes)
@@ -177,6 +188,10 @@ func (c *Config) Receive() error {
 			err)
 	}
 	defer tlsConn.Close()
+	// TODO: The error that's displayed to the user when this timeout period is
+	// up is real nasty. Perhaps create your own error types that you can switch
+	// on and write pretty messages for somewhere?
+	tlsConn.SetDeadline(time.Now().Add(timeout))
 
 	// Receive file's name and size from the sender.
 
