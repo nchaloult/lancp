@@ -178,11 +178,20 @@ func (c *Config) Receive() error {
 	}
 	defer tlsConn.Close()
 
-	// Receive file's bytes from the sender.
+	// Receive file's name and size from the sender.
+
+	// TODO: Is this an okay size for this buffer? How big could it ever get?
+	// https://www.ibm.com/support/knowledgecenter/SSEQVQ_8.1.10/client/c_cmd_filespecsyntax.html
+	fileNameBuf := make([]byte, 1024)
+	n, err := tlsConn.Read(fileNameBuf)
+	if err != nil {
+		return fmt.Errorf("failed to read file name from sender: %v", err)
+	}
+	fileNameAsStr := string(fileNameBuf[:n])
 
 	// TODO: Is this an okay size for this buffer? How big could it ever get?
 	fileSizeBuf := make([]byte, 10)
-	n, err := tlsConn.Read(fileSizeBuf)
+	n, err = tlsConn.Read(fileSizeBuf)
 	if err != nil {
 		return fmt.Errorf("failed to read file size from sender: %v", err)
 	}
@@ -198,7 +207,7 @@ func (c *Config) Receive() error {
 	//
 	// TODO: Read the file name that the sender sends first. Right now, the file
 	// name is hard-coded by the receiver.
-	receivedFile, err := os.Create("from-sender")
+	receivedFile, err := os.Create(fileNameAsStr)
 	if err != nil {
 		return fmt.Errorf("failed to create a new file on disk: %v", err)
 	}
@@ -302,8 +311,6 @@ func (c *Config) Send() error {
 	}
 	defer tlsConn.Close()
 
-	// Send file size to receiver.
-
 	// TODO: should we try to look for and open this file on disk before we do
 	// any of the logic in this big Send() func? Maybe that could happen after
 	// we validate that the command line arg looks like a real path?
@@ -312,12 +319,14 @@ func (c *Config) Send() error {
 		return fmt.Errorf("failed to open file: %s: %v", c.FilePath, err)
 	}
 
-	// Send file size to receiver.
+	// Send file name and size to receiver.
 	fileInfo, err := file.Stat()
 	if err != nil {
 		return fmt.Errorf("failed to retrieve info about the file %s: %v",
 			c.FilePath, err)
 	}
+	fileName := fileInfo.Name()
+	tlsConn.Write([]byte(fileName))
 	fileSize := strconv.FormatInt(fileInfo.Size(), 10)
 	tlsConn.Write([]byte(fileSize))
 
