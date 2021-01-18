@@ -2,13 +2,13 @@ package app
 
 import (
 	"crypto/tls"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	_net "net"
 	"os"
-	"strconv"
 
 	"github.com/nchaloult/lancp/pkg/net"
 	"github.com/nchaloult/lancp/pkg/passphrase"
@@ -189,18 +189,13 @@ func (c *Config) Receive() error {
 	}
 	fileNameAsStr := string(fileNameBuf[:n])
 
-	// TODO: Is this an okay size for this buffer? How big could it ever get?
-	fileSizeBuf := make([]byte, 10)
-	n, err = tlsConn.Read(fileSizeBuf)
+	// Combo of answers from https://stackoverflow.com/questions/35371385/how-can-i-convert-an-int64-into-a-byte-array-in-go
+	fileSizeBuf := make([]byte, binary.MaxVarintLen64)
+	_, err = tlsConn.Read(fileSizeBuf)
 	if err != nil {
 		return fmt.Errorf("failed to read file size from sender: %v", err)
 	}
-	fileSizeAsStr := string(fileSizeBuf[:n])
-	fileSize, err := strconv.ParseInt(fileSizeAsStr, 10, 64)
-	if err != nil {
-		return fmt.Errorf("failed to convert %q to an int: %v",
-			fileSizeAsStr, err)
-	}
+	fileSize, _ := binary.Varint(fileSizeBuf)
 
 	// Create a file on disk that will eventually store the payload we receive
 	// from the sender.
@@ -328,8 +323,15 @@ func (c *Config) Send() error {
 	}
 	fileName := fileInfo.Name()
 	tlsConn.Write([]byte(fileName))
-	fileSize := strconv.FormatInt(fileInfo.Size(), 10)
-	tlsConn.Write([]byte(fileSize))
+
+	// Combo of answers from https://stackoverflow.com/questions/35371385/how-can-i-convert-an-int64-into-a-byte-array-in-go
+	//
+	// We're wasting 1-2 bytes of space by making fileSizeBuf large enough to
+	// hold a signed 64-bit integer, but I'm fine with that for the sake of
+	// convenience :)
+	fileSizeBuf := make([]byte, binary.MaxVarintLen64)
+	n := binary.PutVarint(fileSizeBuf, fileInfo.Size())
+	tlsConn.Write(fileSizeBuf[:n])
 
 	// Send file to the receiver.
 	filePayloadBuf := make([]byte, filePayloadBufSize)
