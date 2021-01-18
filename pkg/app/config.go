@@ -10,9 +10,9 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/nchaloult/lancp/pkg/file"
 	"github.com/nchaloult/lancp/pkg/net"
 	"github.com/nchaloult/lancp/pkg/passphrase"
+	"github.com/nchaloult/lancp/pkg/receiver"
 )
 
 // TODO: temporary! This config const should be read in from a global config,
@@ -214,11 +214,7 @@ func (c *Config) Receive() error {
 	defer receivedFile.Close()
 
 	// Write that payload to a file on disk.
-	fileReceiver, err := file.NewReceiver(filePayloadBufSize)
-	if err != nil {
-		return fmt.Errorf("failed to create new FileReceiver: %v", err)
-	}
-	receivedBytes, err := fileReceiver.WritePayloadToFile(
+	receivedBytes, err := receiver.WritePayloadToFile(
 		receivedFile, fileSize, tlsConn,
 	)
 	if err != nil {
