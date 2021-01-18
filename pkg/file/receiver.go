@@ -5,6 +5,8 @@ import (
 	"io"
 	_net "net"
 	"os"
+
+	"github.com/alsm/ioprogress"
 )
 
 // Receiver is responsible for reading a payload from a network connection and
@@ -31,23 +33,18 @@ func (r *Receiver) WritePayloadToFile(
 	file *os.File,
 	fileSize int64,
 	conn _net.Conn,
-) int64 {
-	var receivedBytes int64
-	for {
-		if (fileSize - receivedBytes) < r.filePayloadBufSize {
-			io.CopyN(file, conn, (fileSize - receivedBytes))
-			conn.Read(make([]byte, (receivedBytes+int64(r.filePayloadBufSize))-fileSize))
-
-			// Set receivedBytes so that the correct number of bytes received
-			// will be displayed to the user.
-			receivedBytes = fileSize
-
-			break
-		}
-
-		io.CopyN(file, conn, int64(r.filePayloadBufSize))
-		receivedBytes += int64(r.filePayloadBufSize)
+) (int64, error) {
+	// progressReader is an io.Reader, and will write the progress of a read to
+	// stdout in real time.
+	progressReader := &ioprogress.Reader{
+		Reader: conn,
+		Size:   fileSize,
 	}
 
-	return receivedBytes
+	receivedBytes, err := io.Copy(file, progressReader)
+	if err != nil {
+		return 0, err
+	}
+
+	return receivedBytes, nil
 }

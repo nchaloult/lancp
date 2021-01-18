@@ -218,7 +218,12 @@ func (c *Config) Receive() error {
 	if err != nil {
 		return fmt.Errorf("failed to create new FileReceiver: %v", err)
 	}
-	receivedBytes := fileReceiver.WritePayloadToFile(receivedFile, fileSize, tlsConn)
+	receivedBytes, err := fileReceiver.WritePayloadToFile(
+		receivedFile, fileSize, tlsConn,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to write file to disk: %v", err)
+	}
 
 	log.Printf("received %d bytes from sender\n", receivedBytes)
 
