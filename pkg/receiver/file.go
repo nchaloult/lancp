@@ -19,10 +19,5 @@ func WritePayloadToFile(file *os.File, fileSize int64, conn _net.Conn) (int64, e
 		Size:   fileSize,
 	}
 
-	receivedBytes, err := io.Copy(file, progressReader)
-	if err != nil {
-		return 0, err
-	}
-
-	return receivedBytes, nil
+	return io.Copy(file, progressReader)
 }

@@ -217,11 +217,11 @@ func (c *Config) Receive() error {
 	receivedBytes, err := receiver.WritePayloadToFile(
 		receivedFile, fileSize, tlsConn,
 	)
+	// Print how much we received no matter what.
+	log.Printf("received %d bytes from sender\n", receivedBytes)
 	if err != nil {
 		return fmt.Errorf("failed to write file to disk: %v", err)
 	}
-
-	log.Printf("received %d bytes from sender\n", receivedBytes)
 
 	return nil
 }
