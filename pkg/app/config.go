@@ -208,8 +208,9 @@ func (c *Config) Receive() error {
 	if os.IsExist(err) {
 		// File already exists with the same name as the one the receiver is
 		// trying to send. Save under a modified name.
+		fileNameAsStr = fmt.Sprintf("lancp-%s", fileNameAsStr)
 		receivedFile, err = os.OpenFile(
-			fmt.Sprintf("lancp-%s", fileNameAsStr),
+			fileNameAsStr,
 			os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
 	}
 	if err != nil {
@@ -218,15 +219,14 @@ func (c *Config) Receive() error {
 	defer receivedFile.Close()
 
 	// Write that payload to a file on disk.
-	receivedBytes, err := receiver.WritePayloadToFile(
+	_, err = receiver.WritePayloadToFile(
 		receivedFile, fileSize, tlsConn,
 	)
-	// Print how much we received no matter what.
-	log.Printf("received %d bytes from sender\n", receivedBytes)
 	if err != nil {
 		return fmt.Errorf("failed to write file to disk: %v", err)
 	}
 
+	log.Printf("wrote %q to disk\n", fileNameAsStr)
 	return nil
 }
 
