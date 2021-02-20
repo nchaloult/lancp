@@ -18,8 +18,8 @@ import (
 // TODO: temporary! This config const should be read in from a global config,
 // or maybe even provided as a command-line arg.
 const (
-	passphrasePayloadBufSize = 32
-	filePayloadBufSize       = 8192
+	passphrasePayloadBufSize  = 32
+	defaultFilePayloadBufSize = 8192
 )
 
 // Config stores input from command line arguments as well as configs set
@@ -332,9 +332,11 @@ func (c *Config) Send() error {
 	fileSizeBuf := make([]byte, binary.MaxVarintLen64)
 	n := binary.PutVarint(fileSizeBuf, fileInfo.Size())
 	tlsConn.Write(fileSizeBuf[:n])
+	fmt.Printf("file size: %d\n", fileInfo.Size())
 
 	// Send file to the receiver.
-	filePayloadBuf := make([]byte, filePayloadBufSize)
+	filePayloadSize := min(fileInfo.Size(), defaultFilePayloadBufSize)
+	filePayloadBuf := make([]byte, filePayloadSize)
 	for {
 		_, err := file.Read(filePayloadBuf)
 		if err == io.EOF {
@@ -345,4 +347,13 @@ func (c *Config) Send() error {
 	}
 
 	return nil
+}
+
+// This ought to be in the standard library imo.
+func min(x, y int64) int64 {
+	if x < y {
+		return x
+	}
+
+	return y
 }
