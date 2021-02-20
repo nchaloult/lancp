@@ -202,7 +202,16 @@ func (c *Config) Receive() error {
 	//
 	// TODO: Read the file name that the sender sends first. Right now, the file
 	// name is hard-coded by the receiver.
-	receivedFile, err := os.Create(fileNameAsStr)
+	receivedFile, err := os.OpenFile(
+		fileNameAsStr,
+		os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
+	if os.IsExist(err) {
+		// File already exists with the same name as the one the receiver is
+		// trying to send. Save under a modified name.
+		receivedFile, err = os.OpenFile(
+			fmt.Sprintf("lancp-%s", fileNameAsStr),
+			os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
+	}
 	if err != nil {
 		return fmt.Errorf("failed to create a new file on disk: %v", err)
 	}
