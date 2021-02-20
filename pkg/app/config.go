@@ -341,7 +341,6 @@ func (c *Config) Send() error {
 	fileSizeBuf := make([]byte, binary.MaxVarintLen64)
 	n := binary.PutVarint(fileSizeBuf, fileInfo.Size())
 	tlsConn.Write(fileSizeBuf[:n])
-	fmt.Printf("file size: %d\n", fileInfo.Size())
 
 	// Send file to the receiver.
 	filePayloadSize := min(fileInfo.Size(), defaultFilePayloadBufSize)
