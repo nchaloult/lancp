@@ -343,6 +343,7 @@ func (c *Config) Send() error {
 	tlsConn.Write(fileSizeBuf[:n])
 
 	// Send file to the receiver.
+	log.Println("sending...")
 	filePayloadSize := min(fileInfo.Size(), defaultFilePayloadBufSize)
 	filePayloadBuf := make([]byte, filePayloadSize)
 	for {
