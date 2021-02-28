@@ -39,17 +39,13 @@ func main() {
 			printUsageAndExit()
 		}
 
-		// TODO: validate that this looks like a file path.
-		//
-		// TODO: write a function somewhere which makes sure that file actually
-		// exists on disk.
 		filePath := os.Args[2]
-
 		cfg, err := app.NewSenderConfig(filePath, port, port+1)
 		if err != nil {
 			printError(err)
 		}
-		if err := cfg.Send(); err != nil {
+
+		if err := cfg.Run(); err != nil {
 			printError(err)
 		}
 	case "receive":
