@@ -32,11 +32,6 @@ func main() {
 	// Why not use fmt instead, then? https://stackoverflow.com/a/19646964
 	log.SetFlags(0)
 
-	// Verify that a subcommand was provided.
-	if len(os.Args) < 2 {
-		printUsageAndExit()
-	}
-
 	subcommand := os.Args[1]
 	switch subcommand {
 	case "send":
