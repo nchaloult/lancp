@@ -64,21 +64,21 @@ type Config struct {
 
 // NewReceiverConfig returns a pointer to a new Config struct intended for use
 // by lancp running in receive mode.
-func NewReceiverConfig(port, tlsPort int) (*Config, error) {
-	portAsString, err := net.GetPortAsString(port)
-	if err != nil {
-		return nil, err
-	}
-	tlsPortAsString, err := net.GetPortAsString(tlsPort)
-	if err != nil {
-		return nil, err
-	}
+// func NewReceiverConfig(port, tlsPort int) (*Config, error) {
+// 	portAsString, err := net.GetPortAsString(port)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	tlsPortAsString, err := net.GetPortAsString(tlsPort)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	return &Config{
-		Port:    portAsString,
-		TLSPort: tlsPortAsString,
-	}, nil
-}
+// 	return &Config{
+// 		Port:    portAsString,
+// 		TLSPort: tlsPortAsString,
+// 	}, nil
+// }
 
 // Receive executes appropriate procedures when lancp is run in receive mode. It
 // completes an initial passphrase handshake with a sender, creates a

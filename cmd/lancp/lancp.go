@@ -57,7 +57,8 @@ func main() {
 		if err != nil {
 			printError(err)
 		}
-		if err := cfg.Receive(); err != nil {
+
+		if err := cfg.Run(); err != nil {
 			printError(err)
 		}
 	default:
