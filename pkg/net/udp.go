@@ -38,7 +38,7 @@ type UDPMessage struct {
 // ReceiveUDPMessage blocks until it receives a UDP message on the provided
 // connection. If it receives a message, it returns that message and the address
 // of the sender. If it doesn't receive a message within the specified timeout
-// duration, it returns a TimeoutError.
+// duration, it returns an error that specifies such.
 //
 // It discards its own messages, like broadcast messages that get delivered to
 // itself.
