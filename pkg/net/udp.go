@@ -20,7 +20,7 @@ func CreateUDPConn(port string) (_net.PacketConn, error) {
 func SendUDPMessage(
 	message string,
 	conn _net.PacketConn,
-	addr *_net.UDPAddr,
+	addr _net.Addr,
 ) error {
 	_, err := conn.WriteTo([]byte(message), addr)
 	return err
