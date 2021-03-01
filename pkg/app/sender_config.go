@@ -10,14 +10,6 @@ import (
 	"github.com/nchaloult/lancp/pkg/net"
 )
 
-// TODO: read these in from some config file, env vars, or something.
-const (
-	handshakeTimeoutDuration = 60
-	certTimeoutDuration      = 3
-	tlsTimeoutDuration       = 3
-	fileSendRetries          = 3
-)
-
 // SenderConfig stores input from command line arguments, as well as configs
 // that are set globally, for use when lancp is run with the "send" subcommand.
 type SenderConfig struct {
