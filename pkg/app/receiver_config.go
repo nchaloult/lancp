@@ -1,6 +1,9 @@
 package app
 
 import (
+	"fmt"
+
+	"github.com/nchaloult/lancp/pkg/handshake"
 	"github.com/nchaloult/lancp/pkg/net"
 )
 
@@ -35,5 +38,16 @@ func NewReceiverConfig(port, tlsPort int) (*ReceiverConfig, error) {
 // creates a self-signed TLS certificate for that sender to use, establishes a
 // TLS connection with that sender, and receives a file.
 func (c *ReceiverConfig) Run() error {
+	conductor, err := handshake.NewReceiverConductor(
+		c.port,
+		handshakeTimeoutDuration,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to prepare for the lancp handshake: %v", err)
+	}
+	if err = conductor.ConductHandshake(); err != nil {
+		return err
+	}
+
 	return nil
 }

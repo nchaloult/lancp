@@ -26,9 +26,8 @@ type SenderConductor struct {
 	timeoutDuration uint
 }
 
-// NewSenderConductor is responsible for executing the steps involved for a
-// sender in the lancp handshake process. It stores configurations for the
-// handshake.
+// NewSenderConductor returns a pointer to a new SenderConductor struct
+// initialized with the provided parameters.
 //
 // timeoutDuration is in seconds.
 //
