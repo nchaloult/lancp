@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 
+	"github.com/nchaloult/lancp/pkg/cert"
 	"github.com/nchaloult/lancp/pkg/handshake"
 	"github.com/nchaloult/lancp/pkg/net"
 )
@@ -47,6 +48,22 @@ func (c *ReceiverConfig) Run() error {
 	}
 	if err = conductor.ConductHandshake(); err != nil {
 		return err
+	}
+
+	localAddr, err := net.GetPreferredOutboundAddr()
+	if err != nil {
+		return err
+	}
+	certificate, err := cert.GenerateSelfSignedCert(localAddr)
+	if err != nil {
+		return fmt.Errorf("failed to generate self-signed certificate: %v", err)
+	}
+	if err = cert.SendToSender(
+		certificate,
+		c.port,
+		certTimeoutDuration,
+	); err != nil {
+		return fmt.Errorf("failed to send self-signed cert to sender: %v", err)
 	}
 
 	return nil

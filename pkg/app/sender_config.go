@@ -58,7 +58,10 @@ func (c *SenderConfig) Run() error {
 		return err
 	}
 
-	cert, err := cert.FetchFromReceiver(receiverAddr, certTimeoutDuration)
+	certificate, err := cert.ReceiveFromReceiver(
+		receiverAddr,
+		certTimeoutDuration,
+	)
 	if err != nil {
 		return fmt.Errorf("failed to get TLS certificate from receiver: %v",
 			err)
@@ -67,7 +70,7 @@ func (c *SenderConfig) Run() error {
 		receiverAddr,
 		c.tlsPort,
 		c.filePath,
-		cert,
+		certificate,
 		tlsTimeoutDuration,
 		fileSendRetries,
 	)
