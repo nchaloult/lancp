@@ -66,13 +66,13 @@ func (c *SenderConductor) ConductHandshake() (_net.Addr, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to build UDP broadcast address: %v", err)
 	}
-	udpConn, err := net.CreateUDPConn(c.port)
+	conn, err := net.CreateUDPConn(c.port)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a UDP connection for"+
 			" handshake: %v", err)
 	}
-	defer udpConn.Close()
-	net.SendUDPMessage(input, udpConn, broadcastAddr)
+	defer conn.Close()
+	net.SendUDPMessage(input, conn, broadcastAddr)
 
 	// Display the expected passphrase for the receiver to send.
 	expectedPassphrase := passphrase.Generate()
@@ -80,7 +80,7 @@ func (c *SenderConductor) ConductHandshake() (_net.Addr, error) {
 
 	// Receive response from receiver, and check that the passphrase they sent
 	// matches what we expect.
-	msg, err := net.ReceiveUDPMessage(udpConn, c.timeoutDuration, c.port)
+	msg, err := net.ReceiveUDPMessage(conn, c.timeoutDuration, c.port)
 	if err != nil {
 		return nil, fmt.Errorf("failed to receive handshake response from"+
 			" receiver: %v", err)
