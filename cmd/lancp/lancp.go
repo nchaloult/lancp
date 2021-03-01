@@ -32,10 +32,15 @@ func main() {
 	// Why not use fmt instead, then? https://stackoverflow.com/a/19646964
 	log.SetFlags(0)
 
+	numArgs := len(os.Args)
+	if numArgs < 2 {
+		printUsageAndExit()
+	}
+
 	subcommand := os.Args[1]
 	switch subcommand {
 	case "send":
-		if len(os.Args) != 3 {
+		if numArgs != 3 {
 			printUsageAndExit()
 		}
 
@@ -49,7 +54,7 @@ func main() {
 			printError(err)
 		}
 	case "receive":
-		if len(os.Args) != 2 {
+		if numArgs != 2 {
 			printUsageAndExit()
 		}
 
