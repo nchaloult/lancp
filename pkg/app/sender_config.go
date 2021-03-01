@@ -72,7 +72,7 @@ func (c *SenderConfig) Run() error {
 			err)
 	}
 	sender := file.NewSender(
-		receiverAddr.String(),
+		receiverAddr,
 		c.tlsPort,
 		c.filePath,
 		cert,

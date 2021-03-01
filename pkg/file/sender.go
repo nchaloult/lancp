@@ -3,6 +3,7 @@ package file
 import (
 	"encoding/binary"
 	"fmt"
+	_net "net"
 	"os"
 
 	"github.com/nchaloult/lancp/pkg/cert"
@@ -25,14 +26,13 @@ type Sender struct {
 // port is the TLS port. It needs to look like a port string (i.e., ":xxxx" or
 // ":xxxxx").
 func NewSender(
-	addr, port, filePath string,
+	addr _net.Addr,
+	port, filePath string,
 	certificate []byte,
 	timeoutDuration, numRetries uint,
 ) *Sender {
 	return &Sender{
-		// Build TLS address.
-		addr: net.GetTLSAddress(addr, port),
-
+		addr:            net.GetTLSAddress(addr.String(), port),
 		certificate:     certificate,
 		filePath:        filePath,
 		timeoutDuration: timeoutDuration,
