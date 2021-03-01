@@ -35,3 +35,9 @@ func ConnectToTLSConn(
 		return nil, fmt.Errorf("timed out after %d seconds", timeoutDuration)
 	}
 }
+
+// SendTLSMessage writes a byte string to the provided connection.
+func SendTLSMessage(message []byte, conn *tls.Conn) error {
+	_, err := conn.Write(message)
+	return err
+}
