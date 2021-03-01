@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/nchaloult/lancp/pkg/cert"
+	"github.com/nchaloult/lancp/pkg/file"
 	"github.com/nchaloult/lancp/pkg/handshake"
 	"github.com/nchaloult/lancp/pkg/net"
 )
@@ -64,6 +65,11 @@ func (c *ReceiverConfig) Run() error {
 		certTimeoutDuration,
 	); err != nil {
 		return fmt.Errorf("failed to send self-signed cert to sender: %v", err)
+	}
+
+	err = file.ReceiveFromSender(certificate, c.tlsPort, tlsTimeoutDuration)
+	if err != nil {
+		return fmt.Errorf("failed to receive file from sender: %v", err)
 	}
 
 	return nil
