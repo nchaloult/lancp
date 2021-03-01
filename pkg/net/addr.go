@@ -18,7 +18,7 @@ import (
 //
 // port needs to look like a port string (i.e., ":xxxx" or ":xxxxx").
 func GetUDPBroadcastAddr(port string) (*_net.UDPAddr, error) {
-	localAddr, err := getPreferredOutboundAddr()
+	localAddr, err := GetPreferredOutboundAddr()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get this device's local IP address:"+
 			" %v", err)
@@ -32,25 +32,10 @@ func GetUDPBroadcastAddr(port string) (*_net.UDPAddr, error) {
 	return broadcastUDPAddr, nil
 }
 
-// getLocalListeningAddress gets the local address of this machine and appends
-// the provided port string to it. Useful for matching a message's return
-// address with the local address of a machine to detect loopback messages.
-//
-// port needs to look like a port string (i.e., ":xxxx" or ":xxxxx").
-func getLocalListeningAddr(port string) (string, error) {
-	localAddr, err := getPreferredOutboundAddr()
-	if err != nil {
-		return "", fmt.Errorf("failed to get this device's local IP address:"+
-			" %v", err)
-	}
-
-	return localAddr.String() + port, nil
-}
-
-// getPreferredOutboundAddr finds this device's preferred outbound IPv4 address
+// GetPreferredOutboundAddr finds this device's preferred outbound IPv4 address
 // on its local network. It prepares to send a UDP datagram to Google's DNS, but
 // doesn't actually send one.
-func getPreferredOutboundAddr() (_net.IP, error) {
+func GetPreferredOutboundAddr() (_net.IP, error) {
 	conn, err := _net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
 		return nil, err
@@ -59,6 +44,21 @@ func getPreferredOutboundAddr() (_net.IP, error) {
 	preferredOutboundAddr := conn.LocalAddr().(*_net.UDPAddr)
 
 	return preferredOutboundAddr.IP, nil
+}
+
+// getLocalListeningAddress gets the local address of this machine and appends
+// the provided port string to it. Useful for matching a message's return
+// address with the local address of a machine to detect loopback messages.
+//
+// port needs to look like a port string (i.e., ":xxxx" or ":xxxxx").
+func getLocalListeningAddr(port string) (string, error) {
+	localAddr, err := GetPreferredOutboundAddr()
+	if err != nil {
+		return "", fmt.Errorf("failed to get this device's local IP address:"+
+			" %v", err)
+	}
+
+	return localAddr.String() + port, nil
 }
 
 // getBroadcastAddr accepts a device's preferred outbound IPv4 address, then
