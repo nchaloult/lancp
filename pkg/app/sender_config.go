@@ -66,15 +66,13 @@ func (c *SenderConfig) Run() error {
 		return fmt.Errorf("failed to get TLS certificate from receiver: %v",
 			err)
 	}
-	sender := file.NewSender(
-		receiverAddr,
-		c.tlsPort,
+	err = file.SendToReceiver(
+		net.GetTLSAddress(receiverAddr.String(), c.tlsPort),
 		c.filePath,
 		certificate,
 		tlsTimeoutDuration,
 		fileSendRetries,
 	)
-	err = sender.SendToReceiver()
 	if err != nil {
 		return fmt.Errorf("failed to send file to receiver: %v", err)
 	}
