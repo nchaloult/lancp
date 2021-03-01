@@ -80,7 +80,7 @@ func (c *ReceiverConductor) ConductHandshake() error {
 	}
 
 	// Send response with our passphrase guess to the sender.
-	net.SendUDPMessage(input, conn, msg.ReturnAddr)
+	net.SendUDPMessage([]byte(input), conn, msg.ReturnAddr)
 
 	return nil
 }

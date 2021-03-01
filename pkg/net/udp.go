@@ -15,14 +15,13 @@ func CreateUDPConn(port string) (_net.PacketConn, error) {
 	return _net.ListenPacket("udp4", port)
 }
 
-// SendUDPMessage converts a provided message into a byte slice and sends it
-// along the provided connection.
+// SendUDPMessage sends the provided byte slice along the provided connection.
 func SendUDPMessage(
-	message string,
+	message []byte,
 	conn _net.PacketConn,
 	addr _net.Addr,
 ) error {
-	_, err := conn.WriteTo([]byte(message), addr)
+	_, err := conn.WriteTo(message, addr)
 	return err
 }
 

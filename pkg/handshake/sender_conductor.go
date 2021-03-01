@@ -71,7 +71,7 @@ func (c *SenderConductor) ConductHandshake() (_net.Addr, error) {
 			" handshake: %v", err)
 	}
 	defer conn.Close()
-	net.SendUDPMessage(input, conn, broadcastAddr)
+	net.SendUDPMessage([]byte(input), conn, broadcastAddr)
 
 	// Display the expected passphrase for the receiver to send.
 	expectedPassphrase := passphrase.Generate()
