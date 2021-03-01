@@ -2,9 +2,9 @@ package app
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/nchaloult/lancp/pkg/cert"
+	"github.com/nchaloult/lancp/pkg/file"
 	"github.com/nchaloult/lancp/pkg/handshake"
 	"github.com/nchaloult/lancp/pkg/io"
 	"github.com/nchaloult/lancp/pkg/net"
@@ -14,6 +14,8 @@ import (
 const (
 	handshakeTimeoutDuration = 60
 	certTimeoutDuration      = 3
+	tlsTimeoutDuration       = 3
+	fileSendRetries          = 3
 )
 
 // SenderConfig stores input from command line arguments, as well as configs
@@ -69,8 +71,18 @@ func (c *SenderConfig) Run() error {
 		return fmt.Errorf("failed to get TLS certificate from receiver: %v",
 			err)
 	}
+	sender := file.NewSender(
+		receiverAddr.String(),
+		c.tlsPort,
+		c.filePath,
+		cert,
+		tlsTimeoutDuration,
+		fileSendRetries,
+	)
+	err = sender.SendToReceiver()
+	if err != nil {
+		return fmt.Errorf("failed to send file to receiver: %v", err)
+	}
 
-	// TODO: stubbed
-	log.Println(cert)
 	return nil
 }

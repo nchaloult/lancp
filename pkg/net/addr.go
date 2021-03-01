@@ -81,3 +81,15 @@ func getBroadcastAddr(
 
 	return broadcastAddr
 }
+
+// GetTLSAddress builds an address from a machine's IP and TLS port. It strips
+// off the port number from the provided address, and tacks on the provided
+// port in its place.
+//
+// addr must be an IPv4 address. Assumed to already have a port number on it.
+//
+// port needs to look like a port string (i.e., ":xxxx" or ":xxxxx").
+func GetTLSAddress(addr string, port string) string {
+	addr = addr[:strings.LastIndex(addr, ":")]
+	return addr + port
+}
