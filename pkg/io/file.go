@@ -18,8 +18,11 @@ func SendFileAlongConn(f *os.File, size int64, conn *tls.Conn) error {
 	payloadBuf := make([]byte, payloadSize)
 	for {
 		_, err := f.Read(payloadBuf)
-		if err == io.EOF {
-			break
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return err
 		}
 
 		if err = net.SendTLSMessage(payloadBuf, conn); err != nil {
