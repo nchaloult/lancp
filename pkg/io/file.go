@@ -83,7 +83,7 @@ func SendFileAlongConn(file *os.File, size int64, conn *tls.Conn) error {
 			return err
 		}
 
-		if err = net.SendTLSMessage(payloadBuf, conn); err != nil {
+		if err = net.SendMessage(payloadBuf, conn); err != nil {
 			return err
 		}
 	}

@@ -17,7 +17,7 @@ func ReceiveFromReceiver(addr _net.Addr, timeoutDuration uint) ([]byte, error) {
 	}
 	defer conn.Close()
 
-	return net.ReceiveTCPMessage(conn, timeoutDuration)
+	return net.ReceiveMessage(conn, timeoutDuration)
 }
 
 // SendToSender establishes an insecure TCP connection with the sender and
@@ -34,11 +34,11 @@ func SendToSender(
 		return err
 	}
 	defer ln.Close()
-	conn, err := net.EstablishTCPConn(ln, timeoutDuration)
+	conn, err := net.EstablishConn(ln, timeoutDuration)
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
 
-	return net.SendTCPMessage(certificate.Bytes, conn)
+	return net.SendMessage(certificate.Bytes, conn)
 }

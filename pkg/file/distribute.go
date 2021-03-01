@@ -39,14 +39,14 @@ func ReceiveFromSender(
 		return fmt.Errorf("failed to create TLS listener: %v", err)
 	}
 	defer ln.Close()
-	conn, err := net.EstablishTLSConn(ln, timeoutDuration)
+	conn, err := net.EstablishConn(ln, timeoutDuration)
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
 
 	// Receive the file's name and size from the sender.
-	nameBuf, err := net.ReceiveTLSMessageWithKnownSize(
+	nameBuf, err := net.ReceiveMessageWithKnownSize(
 		nameBufLen,
 		conn,
 		timeoutDuration,
@@ -55,7 +55,7 @@ func ReceiveFromSender(
 		return fmt.Errorf("failed to receive file name from sender: %v", err)
 	}
 	name := string(nameBuf.Bytes[:nameBuf.Length])
-	sizeBuf, err := net.ReceiveTLSMessageWithKnownSize(
+	sizeBuf, err := net.ReceiveMessageWithKnownSize(
 		sizeBufLen,
 		conn,
 		timeoutDuration,
@@ -111,7 +111,7 @@ func SendToReceiver(
 	if err != nil {
 		return fmt.Errorf("failed to get file info for %s: %v", filePath, err)
 	}
-	if err = net.SendTLSMessage([]byte(fileInfo.Name()), conn); err != nil {
+	if err = net.SendMessage([]byte(fileInfo.Name()), conn); err != nil {
 		return err
 	}
 	// Combo of answers from https://stackoverflow.com/questions/35371385/how-can-i-convert-an-int64-into-a-byte-array-in-go
@@ -121,7 +121,7 @@ func SendToReceiver(
 	// convenience :)
 	fileSizeBuf := make([]byte, binary.MaxVarintLen64)
 	n := binary.PutVarint(fileSizeBuf, fileInfo.Size())
-	if err = net.SendTLSMessage(fileSizeBuf[:n], conn); err != nil {
+	if err = net.SendMessage(fileSizeBuf[:n], conn); err != nil {
 		return err
 	}
 
