@@ -6,6 +6,8 @@ import (
 	"io"
 	_net "net"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/nchaloult/lancp/pkg/net"
 )
@@ -30,10 +32,15 @@ func CreateNewFileOnDisk(name string) (*os.File, error) {
 	// we get a non-existent file name.
 	versionNum := 1
 	for os.IsExist(err) {
+		ext := filepath.Ext(name)
+		basename := strings.TrimSuffix(name, ext)
+
 		file, err = os.OpenFile(
-			fmt.Sprintf("%s (%d)", name, versionNum),
+			fmt.Sprintf("%s (%d)%s", basename, versionNum, ext),
 			os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666,
 		)
+
+		versionNum++
 	}
 
 	return file, err
