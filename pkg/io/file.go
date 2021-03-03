@@ -7,12 +7,14 @@ import (
 	_net "net"
 	"os"
 
-	"github.com/alsm/ioprogress"
 	"github.com/nchaloult/lancp/pkg/net"
 )
 
 // TODO: make these user-configurable.
-const defaultFilePayloadBufSize = 8192
+const (
+	defaultFilePayloadBufSize = 8192
+	progressBarLen            = 40 // # of characters.
+)
 
 // CreateNewFileOnDisk attempts to create a new file in the user's current
 // directory. If a file in that directory already exists with the same name,
@@ -42,29 +44,7 @@ func CreateNewFileOnDisk(name string) (*os.File, error) {
 //
 // TODO: implement timeout and retry logic.
 func ReceiveFileFromConn(file *os.File, size int64, conn _net.Conn) error {
-	// progressReader is an io.Reader, and will write the progress of a read to
-	// stdout in real time.
-	//
-	// Inspired by the documented example on ioprogress.DrawTextFormatBar().
-	bar := ioprogress.DrawTextFormatBar(40)
-	progressReader := &ioprogress.Reader{
-		Reader: conn,
-		Size:   size,
-		// Draw to stderr so that this progress meter will always be displayed,
-		// even if the user is piping or redirecting lancp's output someplace
-		// else.
-		DrawFunc: ioprogress.DrawTerminalf(
-			os.Stderr,
-			func(progress, total int64) string {
-				return fmt.Sprintf(
-					"%s %s",
-					bar(progress, total),
-					ioprogress.DrawTextFormatBytes(progress, total),
-				)
-			},
-		),
-	}
-
+	progressReader := getProgressReader(size, conn, progressBarLen)
 	_, err := io.Copy(file, progressReader)
 	return err
 }
@@ -72,10 +52,12 @@ func ReceiveFileFromConn(file *os.File, size int64, conn _net.Conn) error {
 // TODO: implement timeout and retry logic.
 // TODO: draw progress with ioprogress pkg.
 func SendFileAlongConn(file *os.File, size int64, conn *tls.Conn) error {
+	progressReader := getProgressReader(size, file, progressBarLen)
+
 	payloadSize := min(size, defaultFilePayloadBufSize)
 	payloadBuf := make([]byte, payloadSize)
 	for {
-		_, err := file.Read(payloadBuf)
+		_, err := progressReader.Read(payloadBuf)
 		if err != nil {
 			if err == io.EOF {
 				break
