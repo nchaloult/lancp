@@ -35,6 +35,8 @@ func GetUDPBroadcastAddr(port string) (*_net.UDPAddr, error) {
 // GetPreferredOutboundAddr finds this device's preferred outbound IPv4 address
 // on its local network. It prepares to send a UDP datagram to Google's DNS, but
 // doesn't actually send one.
+//
+// https://stackoverflow.com/a/37382208
 func GetPreferredOutboundAddr() (_net.IP, error) {
 	conn, err := _net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
@@ -68,7 +70,7 @@ func getLocalListeningAddr(port string) (string, error) {
 // For instance, if this device's preferred local address is 192.168.0.69, then
 // getBroadcastAddr will return something like 192.168.0.255:8080.
 //
-// https://stackoverflow.com/a/37382208
+// port needs to look like a port string (i.e., ":xxxx" or ":xxxxx").
 func getBroadcastAddr(
 	preferredOutboundAddr string,
 	port string,

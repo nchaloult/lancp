@@ -36,6 +36,29 @@ func TestGetLocalListeningAddr(t *testing.T) {
 	}
 }
 
+func TestGetBroadcastAddr(t *testing.T) {
+	// Not testing any ports outside of the expected range. The
+	// getLocalListeningAddr func should get its port parameter from the
+	// port.GetPortAsString func, ideally, which already tests this.
+	tests := []struct {
+		preferredOutboundAddr string
+		port                  string
+		expectedRes           string
+	}{
+		{"192.168.0.1", ":1025", "192.168.0.255:1025"},
+		{"10.0.0.1", ":1025", "10.0.0.255:1025"},
+		{"192.168.0.1", ":65535", "192.168.0.255:65535"},
+		{"10.0.0.1", ":65535", "10.0.0.255:65535"},
+	}
+
+	for _, c := range tests {
+		got := getBroadcastAddr(c.preferredOutboundAddr, c.port)
+		if got != c.expectedRes {
+			t.Errorf("unexpected result, got: %q, want: %q", got, c.expectedRes)
+		}
+	}
+}
+
 // independentGetPreferredOutboundAddr gets the test runner device's preferred
 // outbound address.
 //
