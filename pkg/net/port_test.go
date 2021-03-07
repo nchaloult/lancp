@@ -33,7 +33,7 @@ func TestGetPortAsString(t *testing.T) {
 		if (err == nil && c.expectedErr != nil) ||
 			(err != nil && c.expectedErr == nil) ||
 			(c.expectedErr != nil && err.Error() != c.expectedErr.Error()) {
-			t.Fatalf("unexpected error, got: \"%v\"\nwant: \"%v\"",
+			t.Errorf("unexpected error, got: \"%v\"\nwant: \"%v\"",
 				err, c.expectedErr)
 		}
 		if c.expectedErr != nil && err.Error() == c.expectedErr.Error() {
@@ -43,7 +43,7 @@ func TestGetPortAsString(t *testing.T) {
 		}
 
 		if got != c.expectedRes {
-			t.Fatalf("unexpected result, got: %s\nwant: %s", got, c.expectedRes)
+			t.Errorf("unexpected result, got: %s\nwant: %s", got, c.expectedRes)
 		}
 	}
 }
