@@ -3,8 +3,53 @@ package net
 import (
 	"fmt"
 	_net "net"
+	"strings"
 	"testing"
 )
+
+func TestGetUDPBroadcastAddr(t *testing.T) {
+	preferredOutboundAddr, err := independentGetPreferredOutboundAddr()
+	if err != nil {
+		t.Fatalf("failed to get preferred outbound address before starting"+
+			" tests: %v", err)
+	}
+
+	// Not testing any ports outside of the expected range. The
+	// getLocalListeningAddr func should get its port parameter from the
+	// port.GetPortAsString func, ideally, which already tests this.
+	tests := []struct {
+		port             string
+		expectedResAsStr string
+	}{
+		{
+			":1025",
+			fmt.Sprintf("%s%s",
+				preferredOutboundAddr[:strings.LastIndex(preferredOutboundAddr,
+					".")],
+				".255:1025"),
+		},
+		{
+			":65535",
+			fmt.Sprintf("%s%s",
+				preferredOutboundAddr[:strings.LastIndex(preferredOutboundAddr,
+					".")],
+				".255:65535"),
+		},
+	}
+
+	for _, c := range tests {
+		got, err := GetUDPBroadcastAddr(c.port)
+		if err != nil {
+			t.Fatalf("unexpected error, got: \"%v\"", err)
+		}
+
+		gotAsStr := got.String()
+		if gotAsStr != c.expectedResAsStr {
+			t.Errorf("unexpected result, got: %q, want: %q",
+				gotAsStr, c.expectedResAsStr)
+		}
+	}
+}
 
 func TestGetLocalListeningAddr(t *testing.T) {
 	preferredOutboundAddr, err := independentGetPreferredOutboundAddr()
