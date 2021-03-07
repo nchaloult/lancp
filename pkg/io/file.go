@@ -8,15 +8,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/nchaloult/lancp/pkg/net"
 )
 
 // TODO: make these user-configurable.
-const (
-	defaultFilePayloadBufSize = 8192
-	progressBarLen            = 40 // # of characters.
-)
+const progressBarLen = 40 // # of characters.
 
 // CreateNewFileOnDisk attempts to create a new file in the user's current
 // directory. If a file in that directory already exists with the same name,
@@ -60,24 +55,8 @@ func ReceiveFileFromConn(file *os.File, size int64, conn _net.Conn) error {
 // TODO: draw progress with ioprogress pkg.
 func SendFileAlongConn(file *os.File, size int64, conn *tls.Conn) error {
 	progressReader := getProgressReader(size, file, progressBarLen)
-
-	payloadSize := min(size, defaultFilePayloadBufSize)
-	payloadBuf := make([]byte, payloadSize)
-	for {
-		_, err := progressReader.Read(payloadBuf)
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return err
-		}
-
-		if err = net.SendMessage(payloadBuf, conn); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	_, err := io.Copy(conn, progressReader)
+	return err
 }
 
 // This ought to be in the standard library imo.
