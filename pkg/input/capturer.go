@@ -63,8 +63,8 @@ func (c *Capturer) CapturePassphrase() (string, error) {
 	}
 
 	// Convert all CRLF line endings to LF endings.
-	// TODO: Is this necessary? Even on Windows machines?
-	userInput = strings.Replace(userInput, "\n", "", -1)
+	userInput = strings.TrimSuffix(userInput, "\r\n")
+	userInput = strings.TrimSuffix(userInput, "\n")
 
 	return userInput, nil
 }
