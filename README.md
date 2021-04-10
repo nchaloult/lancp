@@ -7,6 +7,36 @@ Easily transfer files securely between two machines on the same local network. S
 
 ![Demo](https://user-images.githubusercontent.com/31291920/114258855-8840ed80-9997-11eb-882e-962e21b0a8c3.gif)
 
+## Installation
+
+To build locally, you'll need [Go 1.16](https://golang.org/dl/) or later installed.
+
+```bash
+git clone git@github.com:nchaloult/lancp.git
+cd lancp/cmd/lancp
+go build ./...
+```
+
+Move the resulting binary to someplace in your `PATH`, and you're ready to go!
+
+## Usage
+
+```
+lancp
+A simple tool for easily transferring files between two machines on the same network.
+
+USAGE:
+    lancp send <file>
+    lancp receive
+
+FLAGS:
+    -h, --help       Prints this usage information and exits
+    -v, --version    Prints version information and exits
+
+ARGS:
+    <file>    The path to a file to send
+```
+
 ## How It Works
 
 `lancp` helps two machines on the same network find each other through a **device discovery handshake**, establishes a secure **TLS connection** between them, then sends a file over that connection.
