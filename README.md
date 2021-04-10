@@ -1,5 +1,6 @@
 # LANCopy — `lancp`
 
+[![tests](https://github.com/nchaloult/lancp/actions/workflows/tests.yml/badge.svg)](https://github.com/nchaloult/lancp/actions/workflows/tests.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nchaloult/lancp)](https://goreportcard.com/report/github.com/nchaloult/lancp)
 
 Easily transfer files securely between two machines on the same local network. Similar to `scp` and `rsync`, but more convenient to use.
