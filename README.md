@@ -4,6 +4,8 @@
 
 Easily transfer files securely between two machines on the same local network. Similar to `scp` and `rsync`, but more convenient to use.
 
+![Demo](https://user-images.githubusercontent.com/31291920/114258855-8840ed80-9997-11eb-882e-962e21b0a8c3.gif)
+
 ## How It Works
 
 `lancp` helps two machines on the same network find each other through a **device discovery handshake**, establishes a secure **TLS connection** between them, then sends a file over that connection.
