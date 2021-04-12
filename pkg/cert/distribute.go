@@ -7,7 +7,7 @@ import (
 )
 
 // ReceiveFromReceiver gets a TLS certificate from the receiver at the provided
-// address through an insecure TCP connection.
+// address through a TCP connection.
 //
 // timeoutDuration is in seconds.
 func ReceiveFromReceiver(addr _net.Addr, timeoutDuration uint) ([]byte, error) {
@@ -20,8 +20,8 @@ func ReceiveFromReceiver(addr _net.Addr, timeoutDuration uint) ([]byte, error) {
 	return net.ReceiveMessage(conn, timeoutDuration)
 }
 
-// SendToSender establishes an insecure TCP connection with the sender and
-// sends a TLS certificate.
+// SendToSender establishes a TCP connection with the sender and sends a TLS
+// certificate.
 //
 // timeoutDuration is in seconds.
 func SendToSender(

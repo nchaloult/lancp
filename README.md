@@ -39,7 +39,7 @@ ARGS:
 
 ## How It Works
 
-`lancp` helps two machines on the same network find each other through a **device discovery handshake**, establishes a secure **TLS connection** between them, then sends a file over that connection.
+`lancp` helps two machines on the same network find each other through a **device discovery handshake**, establishes a **TLS connection** between them, then sends a file over that connection.
 
 `lancp` never reaches out to the open Internet, so it will work between two machines as long they are both connected to the same router.
 
